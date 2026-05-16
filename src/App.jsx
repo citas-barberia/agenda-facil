@@ -3,6 +3,25 @@ import { supabase } from './lib/supabase';
 import './App.css';
 
 function App() {
+  const daysOfWeek = [
+  { value: 0, label: 'Domingo' },
+  { value: 1, label: 'Lunes' },
+  { value: 2, label: 'Martes' },
+  { value: 3, label: 'Miércoles' },
+  { value: 4, label: 'Jueves' },
+  { value: 5, label: 'Viernes' },
+  { value: 6, label: 'Sábado' },
+];
+
+function getDefaultBusinessHours(businessId) {
+  return daysOfWeek.map((day) => ({
+    business_id: businessId,
+    day_of_week: day.value,
+    open_time: day.value === 0 ? '09:00' : '09:00',
+    close_time: day.value === 0 ? '17:00' : '18:00',
+    is_closed: day.value === 0,
+  }));
+}
   const currentPath = window.location.pathname.split('/')[1] || '';
   const isPublicPage = currentPath !== '';
 
@@ -31,6 +50,7 @@ function App() {
   const [appointmentTime, setAppointmentTime] = useState('');
   const [appointments, setAppointments] = useState([]);
   const [clients, setClients] = useState([]);
+  const [businessHours, setBusinessHours] = useState([]);
 
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,6 +91,7 @@ function App() {
       await loadServices(data.id);
       await loadAppointments(data.id);
       await loadClients(data.id);
+      await loadBusinessHours(data.id);
     }
   }
 
@@ -156,6 +177,97 @@ function App() {
   setClients(data || []);
 }
 
+async function loadBusinessHours(businessId) {
+  const { data, error } = await supabase
+    .from('business_hours')
+    .select('*')
+    .eq('business_id', businessId)
+    .order('day_of_week', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando horarios:', error);
+    setMessage(error.message);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    setBusinessHours(getDefaultBusinessHours(businessId));
+    return;
+  }
+
+  const defaultHours = getDefaultBusinessHours(businessId);
+
+  const mergedHours = defaultHours.map((defaultDay) => {
+    const savedDay = data.find(
+      (hour) => hour.day_of_week === defaultDay.day_of_week
+    );
+
+    return savedDay || defaultDay;
+  });
+
+  setBusinessHours(mergedHours);
+}
+
+function updateBusinessHour(dayOfWeek, field, value) {
+  setBusinessHours(
+    businessHours.map((hour) =>
+      hour.day_of_week === dayOfWeek
+        ? { ...hour, [field]: value }
+        : hour
+    )
+  );
+}
+
+async function handleSaveBusinessHours() {
+  setMessage('');
+  setLoading(true);
+
+  try {
+    if (!business?.id) {
+      throw new Error('No hay negocio seleccionado.');
+    }
+
+    const rowsToSave = businessHours.map((hour) => ({
+      business_id: business.id,
+      day_of_week: hour.day_of_week,
+      open_time: hour.open_time,
+      close_time: hour.close_time,
+      is_closed: hour.is_closed,
+    }));
+
+    const { error } = await supabase
+      .from('business_hours')
+      .upsert(rowsToSave, {
+        onConflict: 'business_id,day_of_week',
+      });
+
+    if (error) throw error;
+
+    setMessage('Horario guardado correctamente.');
+    await loadBusinessHours(business.id);
+  } catch (error) {
+    console.error('Error guardando horario:', error);
+    setMessage(error.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+  async function loadBusinessHours(businessId) {
+    const { data, error } = await supabase
+      .from('business_hours')
+      .select('*')
+      .eq('business_id', businessId);
+
+    if (error) {
+      console.error('Error cargando horas de atención:', error);
+      setMessage(error.message);
+      return;
+    }
+
+    setBusinessHours(data || []);
+  }
+
   async function handleAuth(e) {
     e.preventDefault();
     setMessage('');
@@ -221,6 +333,7 @@ function App() {
       if (error) throw error;
 
       setBusiness(data);
+      setBusinessHours(getDefaultBusinessHours(data.id));
       setMessage('Negocio creado correctamente.');
     } catch (error) {
       console.error('Error creando negocio:', error);
@@ -525,6 +638,7 @@ if (hasConflict) {
     setServices([]);
     setAppointments([]);
     setClients([]);
+    setBusinessHours([]);
     setMessage('');
   }
 
@@ -541,6 +655,78 @@ if (hasConflict) {
                   <p className="subtitle">WhatsApp: {business.phone}</p>
                 </div>
               </div>
+
+              <div className="hours-section">
+  <h2>Horario del negocio</h2>
+  <p className="subtitle-left">
+    Definí los días y horas en que tus clientes pueden reservar.
+  </p>
+
+  <div className="hours-list">
+    {businessHours.map((hour) => {
+      const day = daysOfWeek.find(
+        (dayItem) => dayItem.value === hour.day_of_week
+      );
+
+      return (
+        <div className="hour-item" key={hour.day_of_week}>
+          <div className="hour-day">
+            <strong>{day?.label}</strong>
+          </div>
+
+          <label className="closed-check">
+            <input
+              type="checkbox"
+              checked={hour.is_closed}
+              onChange={(e) =>
+                updateBusinessHour(
+                  hour.day_of_week,
+                  'is_closed',
+                  e.target.checked
+                )
+              }
+            />
+            Cerrado
+          </label>
+
+          <input
+            type="time"
+            value={hour.open_time?.slice(0, 5) || '09:00'}
+            disabled={hour.is_closed}
+            onChange={(e) =>
+              updateBusinessHour(
+                hour.day_of_week,
+                'open_time',
+                e.target.value
+              )
+            }
+          />
+
+          <input
+            type="time"
+            value={hour.close_time?.slice(0, 5) || '18:00'}
+            disabled={hour.is_closed}
+            onChange={(e) =>
+              updateBusinessHour(
+                hour.day_of_week,
+                'close_time',
+                e.target.value
+              )
+            }
+          />
+        </div>
+      );
+    })}
+  </div>
+
+  <button
+    className="main-button hours-save-button"
+    onClick={handleSaveBusinessHours}
+    disabled={loading}
+  >
+    {loading ? 'Guardando...' : 'Guardar horario'}
+  </button>
+</div>
 
               <div className="services-section">
                 <h2>Servicios disponibles</h2>
