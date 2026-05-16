@@ -13,6 +13,9 @@ function App() {
     { value: 6, label: 'Sábado' },
   ];
 
+  const SLOT_INTERVAL_MINUTES = 30;
+  const MIN_LEAD_MINUTES = 30;
+
   function getDefaultBusinessHours(businessId) {
     return daysOfWeek.map((day) => ({
       business_id: businessId,
@@ -21,6 +24,34 @@ function App() {
       close_time: day.value === 0 ? '17:00' : '18:00',
       is_closed: day.value === 0,
     }));
+  }
+
+  function timeToMinutes(time) {
+    const [hours, minutes] = time.slice(0, 5).split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+
+  function minutesToTime(totalMinutes) {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+      2,
+      '0'
+    )}`;
+  }
+
+  function roundUpToInterval(minutes, interval) {
+    return Math.ceil(minutes / interval) * interval;
+  }
+
+  function getTodayDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   const currentPath = window.location.pathname.split('/')[1] || '';
@@ -67,8 +98,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-  loadAvailableTimes();
-}, [selectedService, appointmentDate, businessHours]);
+    loadAvailableTimes();
+  }, [selectedService, appointmentDate, businessHours]);
 
   async function checkSession() {
     const { data } = await supabase.auth.getSession();
@@ -459,116 +490,98 @@ function App() {
     }
   }
 
-  const SLOT_INTERVAL_MINUTES = 30;
-const MIN_LEAD_MINUTES = 30;
-
-function timeToMinutes(time) {
-  const [hours, minutes] = time.slice(0, 5).split(':').map(Number);
-  return hours * 60 + minutes;
-}
-
-function minutesToTime(totalMinutes) {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
-    2,
-    '0'
-  )}`;
-}
-
-function roundUpToInterval(minutes, interval) {
-  return Math.ceil(minutes / interval) * interval;
-}
-
-function getTodayDateString() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-async function loadAvailableTimes() {
-  if (!business?.id || !selectedService || !appointmentDate) {
-    setAvailableTimes([]);
-    return;
-  }
-
-  try {
-    const selectedDay = new Date(`${appointmentDate}T00:00:00`).getDay();
-
-    const daySchedule = businessHours.find(
-      (hour) => hour.day_of_week === selectedDay
-    );
-
-    if (!daySchedule || daySchedule.is_closed) {
+  async function loadAvailableTimes() {
+    if (!business?.id || !selectedService || !appointmentDate) {
       setAvailableTimes([]);
-      setAppointmentTime('');
       return;
     }
 
-    const openMinutes = timeToMinutes(daySchedule.open_time || '09:00');
-    const closeMinutes = timeToMinutes(daySchedule.close_time || '18:00');
-    const serviceDuration = Number(selectedService.duration_minutes);
+    try {
+      const { data: latestHours, error: hoursError } = await supabase
+        .from('business_hours')
+        .select('*')
+        .eq('business_id', business.id)
+        .order('day_of_week', { ascending: true });
 
-    let firstAvailableMinute = openMinutes;
+      if (hoursError) throw hoursError;
 
-    if (appointmentDate === getTodayDateString()) {
-      const now = new Date();
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const hoursToUse =
+        latestHours && latestHours.length > 0
+          ? latestHours
+          : getDefaultBusinessHours(business.id);
 
-      firstAvailableMinute = Math.max(
-        openMinutes,
-        roundUpToInterval(
-          nowMinutes + MIN_LEAD_MINUTES,
-          SLOT_INTERVAL_MINUTES
-        )
+      const selectedDay = new Date(`${appointmentDate}T00:00:00`).getDay();
+
+      const daySchedule = hoursToUse.find(
+        (hour) => hour.day_of_week === selectedDay
       );
-    }
 
-    const { data: existingAppointments, error } = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('business_id', business.id)
-      .eq('appointment_date', appointmentDate)
-      .neq('status', 'cancelled');
-
-    if (error) throw error;
-
-    const slots = [];
-
-    for (
-      let start = firstAvailableMinute;
-      start + serviceDuration <= closeMinutes;
-      start += SLOT_INTERVAL_MINUTES
-    ) {
-      const end = start + serviceDuration;
-
-      const hasConflict = existingAppointments.some((appointment) => {
-        const existingStart = timeToMinutes(appointment.start_time);
-        const existingEnd = timeToMinutes(appointment.end_time);
-
-        return start < existingEnd && end > existingStart;
-      });
-
-      if (!hasConflict) {
-        slots.push(minutesToTime(start));
+      if (!daySchedule || daySchedule.is_closed) {
+        setAvailableTimes([]);
+        setAppointmentTime('');
+        return;
       }
-    }
 
-    setAvailableTimes(slots);
+      const openMinutes = timeToMinutes(daySchedule.open_time || '09:00');
+      const closeMinutes = timeToMinutes(daySchedule.close_time || '18:00');
+      const serviceDuration = Number(selectedService.duration_minutes);
 
-    if (!slots.includes(appointmentTime)) {
-      setAppointmentTime('');
+      let firstAvailableMinute = openMinutes;
+
+      if (appointmentDate === getTodayDateString()) {
+        const now = new Date();
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+        firstAvailableMinute = Math.max(
+          openMinutes,
+          roundUpToInterval(
+            nowMinutes + MIN_LEAD_MINUTES,
+            SLOT_INTERVAL_MINUTES
+          )
+        );
+      }
+
+      const { data: existingAppointments, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('business_id', business.id)
+        .eq('appointment_date', appointmentDate)
+        .neq('status', 'cancelled');
+
+      if (error) throw error;
+
+      const slots = [];
+
+      for (
+        let start = firstAvailableMinute;
+        start + serviceDuration <= closeMinutes;
+        start += SLOT_INTERVAL_MINUTES
+      ) {
+        const end = start + serviceDuration;
+
+        const hasConflict = existingAppointments.some((appointment) => {
+          const existingStart = timeToMinutes(appointment.start_time);
+          const existingEnd = timeToMinutes(appointment.end_time);
+
+          return start < existingEnd && end > existingStart;
+        });
+
+        if (!hasConflict) {
+          slots.push(minutesToTime(start));
+        }
+      }
+
+      setAvailableTimes(slots);
+
+      if (!slots.includes(appointmentTime)) {
+        setAppointmentTime('');
+      }
+    } catch (error) {
+      console.error('Error cargando horas disponibles:', error);
+      setMessage(error.message);
+      setAvailableTimes([]);
     }
-  } catch (error) {
-    console.error('Error cargando horas disponibles:', error);
-    setMessage(error.message);
-    setAvailableTimes([]);
   }
-}
 
   async function handleCreateAppointment(e) {
     e.preventDefault();
@@ -582,6 +595,14 @@ async function loadAvailableTimes() {
 
       if (!selectedService) {
         throw new Error('Seleccioná un servicio.');
+      }
+
+      if (!appointmentDate) {
+        throw new Error('Seleccioná una fecha.');
+      }
+
+      if (!appointmentTime) {
+        throw new Error('Seleccioná una hora disponible.');
       }
 
       const [hours, minutes] = appointmentTime.split(':').map(Number);
@@ -676,6 +697,7 @@ async function loadAvailableTimes() {
       setClientPhone('');
       setAppointmentDate('');
       setAppointmentTime('');
+      setAvailableTimes([]);
     } catch (error) {
       console.error('Error creando cita:', error);
       setMessage(error.message);
@@ -766,6 +788,7 @@ async function loadAvailableTimes() {
     setAppointments([]);
     setClients([]);
     setBusinessHours([]);
+    setAvailableTimes([]);
     setMessage('');
   }
 
@@ -808,16 +831,17 @@ async function loadAvailableTimes() {
                           </strong>
                           <br />
                           <button
-  className="small-button"
-  onClick={() => {
-    setSelectedService(service);
-    setAppointmentTime('');
-    setAvailableTimes([]);
-    setMessage('');
-  }}
->
-  Reservar
-</button>
+                            className="small-button"
+                            onClick={() => {
+                              setSelectedService(service);
+                              setAppointmentDate('');
+                              setAppointmentTime('');
+                              setAvailableTimes([]);
+                              setMessage('');
+                            }}
+                          >
+                            Reservar
+                          </button>
                         </div>
                       </div>
                     ))
@@ -833,77 +857,78 @@ async function loadAvailableTimes() {
 
                     <form onSubmit={handleCreateAppointment}>
                       <label>Tu nombre</label>
-<input
-  type="text"
-  placeholder="Ej: Juan Pérez"
-  value={clientName}
-  onChange={(e) => setClientName(e.target.value)}
-  required
-/>
+                      <input
+                        type="text"
+                        placeholder="Ej: Juan Pérez"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        required
+                      />
 
-<label>WhatsApp</label>
-<input
-  type="text"
-  placeholder="Ej: 8888-8888"
-  value={clientPhone}
-  onChange={(e) => setClientPhone(e.target.value)}
-  required
-/>
+                      <label>WhatsApp</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: 8888-8888"
+                        value={clientPhone}
+                        onChange={(e) => setClientPhone(e.target.value)}
+                        required
+                      />
 
-<label>Fecha</label>
-<input
-  type="date"
-  value={appointmentDate}
-  onChange={(e) => {
-    setAppointmentDate(e.target.value);
-    setAppointmentTime('');
-  }}
-  required
-/>
+                      <label>Fecha</label>
+                      <input
+                        type="date"
+                        min={getTodayDateString()}
+                        value={appointmentDate}
+                        onChange={(e) => {
+                          setAppointmentDate(e.target.value);
+                          setAppointmentTime('');
+                        }}
+                        required
+                      />
 
-<label>Hora disponible</label>
-<select
-  value={appointmentTime}
-  onChange={(e) => setAppointmentTime(e.target.value)}
-  required
-  disabled={!appointmentDate || availableTimes.length === 0}
->
-  <option value="">
-    {!appointmentDate
-      ? 'Primero elegí una fecha'
-      : availableTimes.length === 0
-        ? 'No hay horarios disponibles'
-        : 'Seleccioná una hora'}
-  </option>
+                      <label>Hora disponible</label>
+                      <select
+                        value={appointmentTime}
+                        onChange={(e) => setAppointmentTime(e.target.value)}
+                        required
+                        disabled={!appointmentDate || availableTimes.length === 0}
+                      >
+                        <option value="">
+                          {!appointmentDate
+                            ? 'Primero elegí una fecha'
+                            : availableTimes.length === 0
+                              ? 'No hay horarios disponibles'
+                              : 'Seleccioná una hora'}
+                        </option>
 
-  {availableTimes.map((time) => (
-    <option key={time} value={time}>
-      {time}
-    </option>
-  ))}
-</select>
+                        {availableTimes.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
 
-<button
-  className="main-button"
-  type="submit"
-  disabled={loading}
->
-  {loading ? 'Reservando...' : 'Confirmar reserva'}
-</button>
+                      <button
+                        className="main-button"
+                        type="submit"
+                        disabled={loading}
+                      >
+                        {loading ? 'Reservando...' : 'Confirmar reserva'}
+                      </button>
 
-<button
-  type="button"
-  className="secondary-button"
-  onClick={() => {
-    setSelectedService(null);
-    setAppointmentDate('');
-    setAppointmentTime('');
-    setAvailableTimes([]);
-    setMessage('');
-  }}
->
-  Cancelar
-</button>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => {
+                          setSelectedService(null);
+                          setAppointmentDate('');
+                          setAppointmentTime('');
+                          setAvailableTimes([]);
+                          setMessage('');
+                        }}
+                      >
+                        Cancelar
+                      </button>
                     </form>
                   </div>
                 )}
