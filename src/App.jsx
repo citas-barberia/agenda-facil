@@ -4,24 +4,25 @@ import './App.css';
 
 function App() {
   const daysOfWeek = [
-  { value: 0, label: 'Domingo' },
-  { value: 1, label: 'Lunes' },
-  { value: 2, label: 'Martes' },
-  { value: 3, label: 'Miércoles' },
-  { value: 4, label: 'Jueves' },
-  { value: 5, label: 'Viernes' },
-  { value: 6, label: 'Sábado' },
-];
+    { value: 0, label: 'Domingo' },
+    { value: 1, label: 'Lunes' },
+    { value: 2, label: 'Martes' },
+    { value: 3, label: 'Miércoles' },
+    { value: 4, label: 'Jueves' },
+    { value: 5, label: 'Viernes' },
+    { value: 6, label: 'Sábado' },
+  ];
 
-function getDefaultBusinessHours(businessId) {
-  return daysOfWeek.map((day) => ({
-    business_id: businessId,
-    day_of_week: day.value,
-    open_time: day.value === 0 ? '09:00' : '09:00',
-    close_time: day.value === 0 ? '17:00' : '18:00',
-    is_closed: day.value === 0,
-  }));
-}
+  function getDefaultBusinessHours(businessId) {
+    return daysOfWeek.map((day) => ({
+      business_id: businessId,
+      day_of_week: day.value,
+      open_time: '09:00',
+      close_time: day.value === 0 ? '17:00' : '18:00',
+      is_closed: day.value === 0,
+    }));
+  }
+
   const currentPath = window.location.pathname.split('/')[1] || '';
   const isPublicPage = currentPath !== '';
 
@@ -48,6 +49,7 @@ function getDefaultBusinessHours(businessId) {
   const [clientPhone, setClientPhone] = useState('');
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
+
   const [appointments, setAppointments] = useState([]);
   const [clients, setClients] = useState([]);
   const [businessHours, setBusinessHours] = useState([]);
@@ -115,6 +117,7 @@ function getDefaultBusinessHours(businessId) {
 
     setBusiness(data);
     await loadServices(data.id);
+    await loadBusinessHours(data.id);
   }
 
   async function loadServices(businessId) {
@@ -162,93 +165,95 @@ function getDefaultBusinessHours(businessId) {
   }
 
   async function loadClients(businessId) {
-  const { data, error } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('business_id', businessId)
-    .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error cargando clientes:', error);
-    setMessage(error.message);
-    return;
-  }
-
-  setClients(data || []);
-}
-
-
-  const defaultHours = getDefaultBusinessHours(businessId);
-
-  const mergedHours = defaultHours.map((defaultDay) => {
-    const savedDay = data.find(
-      (hour) => hour.day_of_week === defaultDay.day_of_week
-    );
-
-    return savedDay || defaultDay;
-  });
-
-  setBusinessHours(mergedHours);
-}
-
-function updateBusinessHour(dayOfWeek, field, value) {
-  setBusinessHours(
-    businessHours.map((hour) =>
-      hour.day_of_week === dayOfWeek
-        ? { ...hour, [field]: value }
-        : hour
-    )
-  );
-}
-
-async function handleSaveBusinessHours() {
-  setMessage('');
-  setLoading(true);
-
-  try {
-    if (!business?.id) {
-      throw new Error('No hay negocio seleccionado.');
+    if (error) {
+      console.error('Error cargando clientes:', error);
+      setMessage(error.message);
+      return;
     }
 
-    const rowsToSave = businessHours.map((hour) => ({
-      business_id: business.id,
-      day_of_week: hour.day_of_week,
-      open_time: hour.open_time,
-      close_time: hour.close_time,
-      is_closed: hour.is_closed,
-    }));
-
-    const { error } = await supabase
-      .from('business_hours')
-      .upsert(rowsToSave, {
-        onConflict: 'business_id,day_of_week',
-      });
-
-    if (error) throw error;
-
-    setMessage('Horario guardado correctamente.');
-    await loadBusinessHours(business.id);
-  } catch (error) {
-    console.error('Error guardando horario:', error);
-    setMessage(error.message);
-  } finally {
-    setLoading(false);
+    setClients(data || []);
   }
-}
 
   async function loadBusinessHours(businessId) {
     const { data, error } = await supabase
       .from('business_hours')
       .select('*')
-      .eq('business_id', businessId);
+      .eq('business_id', businessId)
+      .order('day_of_week', { ascending: true });
 
     if (error) {
-      console.error('Error cargando horas de atención:', error);
+      console.error('Error cargando horarios:', error);
       setMessage(error.message);
       return;
     }
 
-    setBusinessHours(data || []);
+    if (!data || data.length === 0) {
+      setBusinessHours(getDefaultBusinessHours(businessId));
+      return;
+    }
+
+    const defaultHours = getDefaultBusinessHours(businessId);
+
+    const mergedHours = defaultHours.map((defaultDay) => {
+      const savedDay = data.find(
+        (hour) => hour.day_of_week === defaultDay.day_of_week
+      );
+
+      return savedDay || defaultDay;
+    });
+
+    setBusinessHours(mergedHours);
+  }
+
+  function updateBusinessHour(dayOfWeek, field, value) {
+    setBusinessHours(
+      businessHours.map((hour) =>
+        hour.day_of_week === dayOfWeek
+          ? { ...hour, [field]: value }
+          : hour
+      )
+    );
+  }
+
+  async function handleSaveBusinessHours() {
+    setMessage('');
+    setLoading(true);
+
+    try {
+      if (!business?.id) {
+        throw new Error('No hay negocio seleccionado.');
+      }
+
+      const rowsToSave = businessHours.map((hour) => ({
+        business_id: business.id,
+        day_of_week: hour.day_of_week,
+        open_time: hour.open_time,
+        close_time: hour.close_time,
+        is_closed: hour.is_closed,
+      }));
+
+      const { error } = await supabase
+        .from('business_hours')
+        .upsert(rowsToSave, {
+          onConflict: 'business_id,day_of_week',
+        });
+
+      if (error) throw error;
+
+      setMessage('Horario guardado correctamente.');
+      await loadBusinessHours(business.id);
+    } catch (error) {
+      console.error('Error guardando horario:', error);
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleAuth(e) {
@@ -391,63 +396,63 @@ async function handleSaveBusinessHours() {
     }
   }
 
-function startEditService(service) {
-  setEditingService(service);
-  setServiceName(service.name);
-  setServicePrice(service.price);
-  setServiceDuration(service.duration_minutes);
-  setMessage('');
-}
+  function startEditService(service) {
+    setEditingService(service);
+    setServiceName(service.name);
+    setServicePrice(service.price);
+    setServiceDuration(service.duration_minutes);
+    setMessage('');
+  }
 
-function cancelEditService() {
-  setEditingService(null);
-  setServiceName('');
-  setServicePrice('');
-  setServiceDuration('');
-  setMessage('');
-}
-
-async function handleUpdateService(e) {
-  e.preventDefault();
-  setMessage('');
-  setLoading(true);
-
-  try {
-    if (!editingService?.id) {
-      throw new Error('No hay servicio seleccionado para editar.');
-    }
-
-    const { data, error } = await supabase
-      .from('services')
-      .update({
-        name: serviceName,
-        price: Number(servicePrice),
-        duration_minutes: Number(serviceDuration),
-      })
-      .eq('id', editingService.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    setServices(
-      services.map((service) =>
-        service.id === editingService.id ? data : service
-      )
-    );
-
+  function cancelEditService() {
     setEditingService(null);
     setServiceName('');
     setServicePrice('');
     setServiceDuration('');
-    setMessage('Servicio actualizado correctamente.');
-  } catch (error) {
-    console.error('Error actualizando servicio:', error);
-    setMessage(error.message);
-  } finally {
-    setLoading(false);
+    setMessage('');
   }
-}
+
+  async function handleUpdateService(e) {
+    e.preventDefault();
+    setMessage('');
+    setLoading(true);
+
+    try {
+      if (!editingService?.id) {
+        throw new Error('No hay servicio seleccionado para editar.');
+      }
+
+      const { data, error } = await supabase
+        .from('services')
+        .update({
+          name: serviceName,
+          price: Number(servicePrice),
+          duration_minutes: Number(serviceDuration),
+        })
+        .eq('id', editingService.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setServices(
+        services.map((service) =>
+          service.id === editingService.id ? data : service
+        )
+      );
+
+      setEditingService(null);
+      setServiceName('');
+      setServicePrice('');
+      setServiceDuration('');
+      setMessage('Servicio actualizado correctamente.');
+    } catch (error) {
+      console.error('Error actualizando servicio:', error);
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleCreateAppointment(e) {
     e.preventDefault();
@@ -474,25 +479,48 @@ async function handleUpdateService(e) {
       );
 
       const endTime = endDate.toTimeString().slice(0, 5);
+
+      const appointmentDay = new Date(`${appointmentDate}T00:00:00`).getDay();
+      const daySchedule = businessHours.find(
+        (hour) => hour.day_of_week === appointmentDay
+      );
+
+      if (daySchedule) {
+        if (daySchedule.is_closed) {
+          throw new Error('Ese día el negocio está cerrado.');
+        }
+
+        const openTime = daySchedule.open_time?.slice(0, 5);
+        const closeTime = daySchedule.close_time?.slice(0, 5);
+
+        if (openTime && closeTime) {
+          if (appointmentTime < openTime || endTime > closeTime) {
+            throw new Error(
+              `Ese horario está fuera del horario del negocio (${openTime} - ${closeTime}).`
+            );
+          }
+        }
+      }
+
       const { data: existingAppointments, error: checkError } = await supabase
-  .from('appointments')
-  .select('*')
-  .eq('business_id', business.id)
-  .eq('appointment_date', appointmentDate)
-  .neq('status', 'cancelled');
+        .from('appointments')
+        .select('*')
+        .eq('business_id', business.id)
+        .eq('appointment_date', appointmentDate)
+        .neq('status', 'cancelled');
 
-if (checkError) throw checkError;
+      if (checkError) throw checkError;
 
-const hasConflict = existingAppointments.some((appointment) => {
-  const existingStart = appointment.start_time.slice(0, 5);
-  const existingEnd = appointment.end_time.slice(0, 5);
+      const hasConflict = existingAppointments.some((appointment) => {
+        const existingStart = appointment.start_time.slice(0, 5);
+        const existingEnd = appointment.end_time.slice(0, 5);
 
-  return appointmentTime < existingEnd && endTime > existingStart;
-});
+        return appointmentTime < existingEnd && endTime > existingStart;
+      });
 
-if (hasConflict) {
-  throw new Error('Esa hora ya está ocupada. Elegí otra hora.');
-}
+      if (hasConflict) {
+        throw new Error('Esa hora ya está ocupada. Elegí otra hora.');
+      }
 
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
@@ -570,35 +598,35 @@ if (hasConflict) {
   }
 
   async function handleDeleteAppointment(appointmentId) {
-  const confirmDelete = window.confirm(
-    '¿Seguro que querés eliminar esta cita?'
-  );
-
-  if (!confirmDelete) return;
-
-  setMessage('');
-  setLoading(true);
-
-  try {
-    const { error } = await supabase
-      .from('appointments')
-      .delete()
-      .eq('id', appointmentId);
-
-    if (error) throw error;
-
-    setAppointments(
-      appointments.filter((appointment) => appointment.id !== appointmentId)
+    const confirmDelete = window.confirm(
+      '¿Seguro que querés eliminar esta cita?'
     );
 
-    setMessage('Cita eliminada correctamente.');
-  } catch (error) {
-    console.error('Error eliminando cita:', error);
-    setMessage(error.message);
-  } finally {
-    setLoading(false);
+    if (!confirmDelete) return;
+
+    setMessage('');
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      setAppointments(
+        appointments.filter((appointment) => appointment.id !== appointmentId)
+      );
+
+      setMessage('Cita eliminada correctamente.');
+    } catch (error) {
+      console.error('Error eliminando cita:', error);
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   function getWhatsAppLink(appointment) {
     const phone = appointment.clients?.phone?.replace(/\D/g, '') || '';
@@ -639,7 +667,6 @@ if (hasConflict) {
                 </div>
               </div>
 
-           
               <div className="services-section">
                 <h2>Servicios disponibles</h2>
                 <p className="subtitle-left">
@@ -773,7 +800,9 @@ if (hasConflict) {
             <p>
               <strong>Link público:</strong>
             </p>
-            <p>http://localhost:5173/{business.slug}</p>
+            <p>
+              {window.location.origin}/{business.slug}
+            </p>
           </div>
 
           <div className="grid">
@@ -802,7 +831,10 @@ if (hasConflict) {
                   <div className="appointment-item" key={appointment.id}>
                     <div>
                       <h3>{appointment.clients?.name || 'Cliente sin nombre'}</h3>
-                      <p>WhatsApp: {appointment.clients?.phone || 'Sin teléfono'}</p>
+                      <p>
+                        WhatsApp:{' '}
+                        {appointment.clients?.phone || 'Sin teléfono'}
+                      </p>
                       <p>
                         Servicio:{' '}
                         {appointment.services?.name || 'Servicio eliminado'}
@@ -874,13 +906,16 @@ if (hasConflict) {
                             Cancelar
                           </button>
                         )}
+
                         <button
-  className="action-button delete"
-  onClick={() => handleDeleteAppointment(appointment.id)}
-  disabled={loading}
->
-  Eliminar cita
-</button>
+                          className="action-button delete"
+                          onClick={() =>
+                            handleDeleteAppointment(appointment.id)
+                          }
+                          disabled={loading}
+                        >
+                          Eliminar cita
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -890,106 +925,109 @@ if (hasConflict) {
           </div>
 
           <div className="clients-section">
-  <h2>Clientes</h2>
-  <p className="subtitle-left">
-    Estos son los clientes que han reservado en tu negocio.
-  </p>
+            <h2>Clientes</h2>
+            <p className="subtitle-left">
+              Estos son los clientes que han reservado en tu negocio.
+            </p>
 
-  <div className="clients-list">
-    {clients.length === 0 ? (
-      <p className="empty-text">Todavía no hay clientes registrados.</p>
-    ) : (
-      clients.map((client) => (
-        <div className="client-item" key={client.id}>
-          <div>
-            <h3>{client.name}</h3>
-            <p>WhatsApp: {client.phone}</p>
+            <div className="clients-list">
+              {clients.length === 0 ? (
+                <p className="empty-text">
+                  Todavía no hay clientes registrados.
+                </p>
+              ) : (
+                clients.map((client) => (
+                  <div className="client-item" key={client.id}>
+                    <div>
+                      <h3>{client.name}</h3>
+                      <p>WhatsApp: {client.phone}</p>
+                    </div>
+
+                    <a
+                      className="small-button client-whatsapp"
+                      href={`https://wa.me/506${client.phone?.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WhatsApp
+                    </a>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          <a
-            className="small-button client-whatsapp"
-            href={`https://wa.me/506${client.phone?.replace(/\D/g, '')}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            WhatsApp
-          </a>
-        </div>
-      ))
-    )}
-  </div>
-</div>
-<div className="hours-section">
-  <h2>Horario del negocio</h2>
-  <p className="subtitle-left">
-    Definí los días y horas en que tus clientes pueden reservar.
-  </p>
+          <div className="hours-section">
+            <h2>Horario del negocio</h2>
+            <p className="subtitle-left">
+              Definí los días y horas en que tus clientes pueden reservar.
+            </p>
 
-  <div className="hours-list">
-    {businessHours.map((hour) => {
-      const day = daysOfWeek.find(
-        (dayItem) => dayItem.value === hour.day_of_week
-      );
+            <div className="hours-list">
+              {businessHours.map((hour) => {
+                const day = daysOfWeek.find(
+                  (dayItem) => dayItem.value === hour.day_of_week
+                );
 
-      return (
-        <div className="hour-item" key={hour.day_of_week}>
-          <div className="hour-day">
-            <strong>{day?.label}</strong>
+                return (
+                  <div className="hour-item" key={hour.day_of_week}>
+                    <div className="hour-day">
+                      <strong>{day?.label}</strong>
+                    </div>
+
+                    <label className="closed-check">
+                      <input
+                        type="checkbox"
+                        checked={hour.is_closed}
+                        onChange={(e) =>
+                          updateBusinessHour(
+                            hour.day_of_week,
+                            'is_closed',
+                            e.target.checked
+                          )
+                        }
+                      />
+                      Cerrado
+                    </label>
+
+                    <input
+                      type="time"
+                      value={hour.open_time?.slice(0, 5) || '09:00'}
+                      disabled={hour.is_closed}
+                      onChange={(e) =>
+                        updateBusinessHour(
+                          hour.day_of_week,
+                          'open_time',
+                          e.target.value
+                        )
+                      }
+                    />
+
+                    <input
+                      type="time"
+                      value={hour.close_time?.slice(0, 5) || '18:00'}
+                      disabled={hour.is_closed}
+                      onChange={(e) =>
+                        updateBusinessHour(
+                          hour.day_of_week,
+                          'close_time',
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              className="main-button hours-save-button"
+              onClick={handleSaveBusinessHours}
+              disabled={loading}
+            >
+              {loading ? 'Guardando...' : 'Guardar horario'}
+            </button>
           </div>
-
-          <label className="closed-check">
-            <input
-              type="checkbox"
-              checked={hour.is_closed}
-              onChange={(e) =>
-                updateBusinessHour(
-                  hour.day_of_week,
-                  'is_closed',
-                  e.target.checked
-                )
-              }
-            />
-            Cerrado
-          </label>
-
-          <input
-            type="time"
-            value={hour.open_time?.slice(0, 5) || '09:00'}
-            disabled={hour.is_closed}
-            onChange={(e) =>
-              updateBusinessHour(
-                hour.day_of_week,
-                'open_time',
-                e.target.value
-              )
-            }
-          />
-
-          <input
-            type="time"
-            value={hour.close_time?.slice(0, 5) || '18:00'}
-            disabled={hour.is_closed}
-            onChange={(e) =>
-              updateBusinessHour(
-                hour.day_of_week,
-                'close_time',
-                e.target.value
-              )
-            }
-          />
-        </div>
-      );
-    })}
-  </div>
-
-  <button
-    className="main-button hours-save-button"
-    onClick={handleSaveBusinessHours}
-    disabled={loading}
-  >
-    {loading ? 'Guardando...' : 'Guardar horario'}
-  </button>
-</div>
 
           <div className="services-section">
             <h2>Servicios</h2>
@@ -998,9 +1036,9 @@ if (hasConflict) {
             </p>
 
             <form
-  className="service-form"
-  onSubmit={editingService ? handleUpdateService : handleCreateService}
->
+              className="service-form"
+              onSubmit={editingService ? handleUpdateService : handleCreateService}
+            >
               <input
                 type="text"
                 placeholder="Nombre del servicio"
@@ -1026,22 +1064,22 @@ if (hasConflict) {
               />
 
               <button className="main-button" type="submit" disabled={loading}>
-  {loading
-    ? 'Guardando...'
-    : editingService
-      ? 'Guardar cambios'
-      : 'Agregar servicio'}
-</button>
+                {loading
+                  ? 'Guardando...'
+                  : editingService
+                    ? 'Guardar cambios'
+                    : 'Agregar servicio'}
+              </button>
 
-{editingService && (
-  <button
-    type="button"
-    className="secondary-button"
-    onClick={cancelEditService}
-  >
-    Cancelar edición
-  </button>
-)}
+              {editingService && (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={cancelEditService}
+                >
+                  Cancelar edición
+                </button>
+              )}
             </form>
 
             {message && <p className="message">{message}</p>}
@@ -1065,12 +1103,12 @@ if (hasConflict) {
                       </strong>
 
                       <button
-  className="edit-service-button"
-  onClick={() => startEditService(service)}
-  disabled={loading}
->
-  Editar
-</button>
+                        className="edit-service-button"
+                        onClick={() => startEditService(service)}
+                        disabled={loading}
+                      >
+                        Editar
+                      </button>
 
                       <button
                         className="delete-service-button"
@@ -1201,6 +1239,6 @@ if (hasConflict) {
       </div>
     </div>
   );
-
+}
 
 export default App;
