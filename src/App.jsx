@@ -98,8 +98,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    loadAvailableTimes();
-  }, [selectedService, appointmentDate, businessHours]);
+  loadAvailableTimes();
+}, [business?.id, selectedService, appointmentDate]);
 
   async function checkSession() {
     const { data } = await supabase.auth.getSession();
@@ -490,99 +490,101 @@ function App() {
     }
   }
 
-  async function loadAvailableTimes() {
-    if (!business?.id || !selectedService || !appointmentDate) {
-      setAvailableTimes([]);
-      return;
-    }
+async function loadAvailableTimes() {
+  if (!business?.id || !selectedService || !appointmentDate) {
+    setAvailableTimes([]);
+    setAppointmentTime('');
+    return;
+  }
 
-    try {
-      const { data: latestHours, error: hoursError } = await supabase
-        .from('business_hours')
-        .select('*')
-        .eq('business_id', business.id)
-        .order('day_of_week', { ascending: true });
+  try {
+    setMessage('');
 
-      if (hoursError) throw hoursError;
+    const selectedDay = new Date(`${appointmentDate}T00:00:00`).getDay();
 
-      const hoursToUse =
-        latestHours && latestHours.length > 0
-          ? latestHours
-          : getDefaultBusinessHours(business.id);
+    const { data: daySchedule, error: hoursError } = await supabase
+      .from('business_hours')
+      .select('*')
+      .eq('business_id', business.id)
+      .eq('day_of_week', selectedDay)
+      .maybeSingle();
 
-      const selectedDay = new Date(`${appointmentDate}T00:00:00`).getDay();
+    if (hoursError) throw hoursError;
 
-      const daySchedule = hoursToUse.find(
+    const scheduleToUse =
+      daySchedule ||
+      getDefaultBusinessHours(business.id).find(
         (hour) => hour.day_of_week === selectedDay
       );
 
-      if (!daySchedule || daySchedule.is_closed) {
-        setAvailableTimes([]);
-        setAppointmentTime('');
-        return;
-      }
+    if (!scheduleToUse || scheduleToUse.is_closed) {
+      setAvailableTimes([]);
+      setAppointmentTime('');
+      return;
+    }
 
-      const openMinutes = timeToMinutes(daySchedule.open_time || '09:00');
-      const closeMinutes = timeToMinutes(daySchedule.close_time || '18:00');
-      const serviceDuration = Number(selectedService.duration_minutes);
+    const openMinutes = timeToMinutes(scheduleToUse.open_time || '09:00');
+    const closeMinutes = timeToMinutes(scheduleToUse.close_time || '18:00');
+    const serviceDuration = Number(selectedService.duration_minutes);
 
-      let firstAvailableMinute = openMinutes;
+    let firstAvailableMinute = openMinutes;
 
-      if (appointmentDate === getTodayDateString()) {
-        const now = new Date();
-        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    if (appointmentDate === getTodayDateString()) {
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-        firstAvailableMinute = Math.max(
-          openMinutes,
-          roundUpToInterval(
-            nowMinutes + MIN_LEAD_MINUTES,
-            SLOT_INTERVAL_MINUTES
-          )
-        );
-      }
+      firstAvailableMinute = Math.max(
+        openMinutes,
+        roundUpToInterval(
+          nowMinutes + MIN_LEAD_MINUTES,
+          SLOT_INTERVAL_MINUTES
+        )
+      );
+    }
 
-      const { data: existingAppointments, error } = await supabase
+    const { data: existingAppointments, error: appointmentsError } =
+      await supabase
         .from('appointments')
         .select('*')
         .eq('business_id', business.id)
         .eq('appointment_date', appointmentDate)
         .neq('status', 'cancelled');
 
-      if (error) throw error;
+    if (appointmentsError) throw appointmentsError;
 
-      const slots = [];
+    const slots = [];
 
-      for (
-        let start = firstAvailableMinute;
-        start + serviceDuration <= closeMinutes;
-        start += SLOT_INTERVAL_MINUTES
-      ) {
-        const end = start + serviceDuration;
+    for (
+      let start = firstAvailableMinute;
+      start + serviceDuration <= closeMinutes;
+      start += SLOT_INTERVAL_MINUTES
+    ) {
+      const end = start + serviceDuration;
 
-        const hasConflict = existingAppointments.some((appointment) => {
-          const existingStart = timeToMinutes(appointment.start_time);
-          const existingEnd = timeToMinutes(appointment.end_time);
+      const hasConflict = (existingAppointments || []).some((appointment) => {
+        const existingStart = timeToMinutes(appointment.start_time);
+        const existingEnd = timeToMinutes(appointment.end_time);
 
-          return start < existingEnd && end > existingStart;
-        });
+        return start < existingEnd && end > existingStart;
+      });
 
-        if (!hasConflict) {
-          slots.push(minutesToTime(start));
-        }
+      if (!hasConflict) {
+        slots.push(minutesToTime(start));
       }
-
-      setAvailableTimes(slots);
-
-      if (!slots.includes(appointmentTime)) {
-        setAppointmentTime('');
-      }
-    } catch (error) {
-      console.error('Error cargando horas disponibles:', error);
-      setMessage(error.message);
-      setAvailableTimes([]);
     }
-  }
 
+    setAvailableTimes(slots);
+
+    if (!slots.includes(appointmentTime)) {
+      setAppointmentTime('');
+    }
+  } catch (error) {
+    console.error('Error cargando horas disponibles:', error);
+    setMessage(error.message);
+    setAvailableTimes([]);
+    setAppointmentTime('');
+  }
+}
   async function handleCreateAppointment(e) {
     e.preventDefault();
     setMessage('');
