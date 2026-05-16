@@ -833,24 +833,35 @@ async function loadAvailableTimes() {
 
                     <form onSubmit={handleCreateAppointment}>
                       <label>Tu nombre</label>
-                      <input
-                        type="text"
-                        placeholder="Ej: Juan Pérez"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                        required
-                      />
+<input
+  type="text"
+  placeholder="Ej: Juan Pérez"
+  value={clientName}
+  onChange={(e) => setClientName(e.target.value)}
+  required
+/>
 
-                      <label>WhatsApp</label>
-                      <input
-                        type="text"
-                        placeholder="Ej: 8888-8888"
-                        value={clientPhone}
-                        onChange={(e) => setClientPhone(e.target.value)}
-                        required
-                      />
+<label>WhatsApp</label>
+<input
+  type="text"
+  placeholder="Ej: 8888-8888"
+  value={clientPhone}
+  onChange={(e) => setClientPhone(e.target.value)}
+  required
+/>
 
-                      <label>Hora disponible</label>
+<label>Fecha</label>
+<input
+  type="date"
+  value={appointmentDate}
+  onChange={(e) => {
+    setAppointmentDate(e.target.value);
+    setAppointmentTime('');
+  }}
+  required
+/>
+
+<label>Hora disponible</label>
 <select
   value={appointmentTime}
   onChange={(e) => setAppointmentTime(e.target.value)}
@@ -872,29 +883,27 @@ async function loadAvailableTimes() {
   ))}
 </select>
 
-                      <label>Hora</label>
-                      <input
-                        type="time"
-                        value={appointmentTime}
-                        onChange={(e) => setAppointmentTime(e.target.value)}
-                        required
-                      />
+<button
+  className="main-button"
+  type="submit"
+  disabled={loading}
+>
+  {loading ? 'Reservando...' : 'Confirmar reserva'}
+</button>
 
-                      <button
-                        className="main-button"
-                        type="submit"
-                        disabled={loading}
-                      >
-                        {loading ? 'Reservando...' : 'Confirmar reserva'}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => setSelectedService(null)}
-                      >
-                        Cancelar
-                      </button>
+<button
+  type="button"
+  className="secondary-button"
+  onClick={() => {
+    setSelectedService(null);
+    setAppointmentDate('');
+    setAppointmentTime('');
+    setAvailableTimes([]);
+    setMessage('');
+  }}
+>
+  Cancelar
+</button>
                     </form>
                   </div>
                 )}
