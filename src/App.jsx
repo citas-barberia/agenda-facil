@@ -49,6 +49,7 @@ function App() {
   const [clientPhone, setClientPhone] = useState('');
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
+  const [availableTimes, setAvailableTimes] = useState([]);
 
   const [appointments, setAppointments] = useState([]);
   const [clients, setClients] = useState([]);
@@ -64,6 +65,10 @@ function App() {
       checkSession();
     }
   }, []);
+
+  useEffect(() => {
+  loadAvailableTimes();
+}, [selectedService, appointmentDate, businessHours]);
 
   async function checkSession() {
     const { data } = await supabase.auth.getSession();
@@ -454,6 +459,117 @@ function App() {
     }
   }
 
+  const SLOT_INTERVAL_MINUTES = 30;
+const MIN_LEAD_MINUTES = 30;
+
+function timeToMinutes(time) {
+  const [hours, minutes] = time.slice(0, 5).split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function minutesToTime(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+    2,
+    '0'
+  )}`;
+}
+
+function roundUpToInterval(minutes, interval) {
+  return Math.ceil(minutes / interval) * interval;
+}
+
+function getTodayDateString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+async function loadAvailableTimes() {
+  if (!business?.id || !selectedService || !appointmentDate) {
+    setAvailableTimes([]);
+    return;
+  }
+
+  try {
+    const selectedDay = new Date(`${appointmentDate}T00:00:00`).getDay();
+
+    const daySchedule = businessHours.find(
+      (hour) => hour.day_of_week === selectedDay
+    );
+
+    if (!daySchedule || daySchedule.is_closed) {
+      setAvailableTimes([]);
+      setAppointmentTime('');
+      return;
+    }
+
+    const openMinutes = timeToMinutes(daySchedule.open_time || '09:00');
+    const closeMinutes = timeToMinutes(daySchedule.close_time || '18:00');
+    const serviceDuration = Number(selectedService.duration_minutes);
+
+    let firstAvailableMinute = openMinutes;
+
+    if (appointmentDate === getTodayDateString()) {
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+      firstAvailableMinute = Math.max(
+        openMinutes,
+        roundUpToInterval(
+          nowMinutes + MIN_LEAD_MINUTES,
+          SLOT_INTERVAL_MINUTES
+        )
+      );
+    }
+
+    const { data: existingAppointments, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('business_id', business.id)
+      .eq('appointment_date', appointmentDate)
+      .neq('status', 'cancelled');
+
+    if (error) throw error;
+
+    const slots = [];
+
+    for (
+      let start = firstAvailableMinute;
+      start + serviceDuration <= closeMinutes;
+      start += SLOT_INTERVAL_MINUTES
+    ) {
+      const end = start + serviceDuration;
+
+      const hasConflict = existingAppointments.some((appointment) => {
+        const existingStart = timeToMinutes(appointment.start_time);
+        const existingEnd = timeToMinutes(appointment.end_time);
+
+        return start < existingEnd && end > existingStart;
+      });
+
+      if (!hasConflict) {
+        slots.push(minutesToTime(start));
+      }
+    }
+
+    setAvailableTimes(slots);
+
+    if (!slots.includes(appointmentTime)) {
+      setAppointmentTime('');
+    }
+  } catch (error) {
+    console.error('Error cargando horas disponibles:', error);
+    setMessage(error.message);
+    setAvailableTimes([]);
+  }
+}
+
   async function handleCreateAppointment(e) {
     e.preventDefault();
     setMessage('');
@@ -692,14 +808,16 @@ function App() {
                           </strong>
                           <br />
                           <button
-                            className="small-button"
-                            onClick={() => {
-                              setSelectedService(service);
-                              setMessage('');
-                            }}
-                          >
-                            Reservar
-                          </button>
+  className="small-button"
+  onClick={() => {
+    setSelectedService(service);
+    setAppointmentTime('');
+    setAvailableTimes([]);
+    setMessage('');
+  }}
+>
+  Reservar
+</button>
                         </div>
                       </div>
                     ))
@@ -732,13 +850,27 @@ function App() {
                         required
                       />
 
-                      <label>Fecha</label>
-                      <input
-                        type="date"
-                        value={appointmentDate}
-                        onChange={(e) => setAppointmentDate(e.target.value)}
-                        required
-                      />
+                      <label>Hora disponible</label>
+<select
+  value={appointmentTime}
+  onChange={(e) => setAppointmentTime(e.target.value)}
+  required
+  disabled={!appointmentDate || availableTimes.length === 0}
+>
+  <option value="">
+    {!appointmentDate
+      ? 'Primero elegí una fecha'
+      : availableTimes.length === 0
+        ? 'No hay horarios disponibles'
+        : 'Seleccioná una hora'}
+  </option>
+
+  {availableTimes.map((time) => (
+    <option key={time} value={time}>
+      {time}
+    </option>
+  ))}
+</select>
 
                       <label>Hora</label>
                       <input
