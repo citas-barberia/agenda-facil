@@ -177,23 +177,6 @@ function getDefaultBusinessHours(businessId) {
   setClients(data || []);
 }
 
-async function loadBusinessHours(businessId) {
-  const { data, error } = await supabase
-    .from('business_hours')
-    .select('*')
-    .eq('business_id', businessId)
-    .order('day_of_week', { ascending: true });
-
-  if (error) {
-    console.error('Error cargando horarios:', error);
-    setMessage(error.message);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    setBusinessHours(getDefaultBusinessHours(businessId));
-    return;
-  }
 
   const defaultHours = getDefaultBusinessHours(businessId);
 
@@ -656,78 +639,7 @@ if (hasConflict) {
                 </div>
               </div>
 
-              <div className="hours-section">
-  <h2>Horario del negocio</h2>
-  <p className="subtitle-left">
-    Definí los días y horas en que tus clientes pueden reservar.
-  </p>
-
-  <div className="hours-list">
-    {businessHours.map((hour) => {
-      const day = daysOfWeek.find(
-        (dayItem) => dayItem.value === hour.day_of_week
-      );
-
-      return (
-        <div className="hour-item" key={hour.day_of_week}>
-          <div className="hour-day">
-            <strong>{day?.label}</strong>
-          </div>
-
-          <label className="closed-check">
-            <input
-              type="checkbox"
-              checked={hour.is_closed}
-              onChange={(e) =>
-                updateBusinessHour(
-                  hour.day_of_week,
-                  'is_closed',
-                  e.target.checked
-                )
-              }
-            />
-            Cerrado
-          </label>
-
-          <input
-            type="time"
-            value={hour.open_time?.slice(0, 5) || '09:00'}
-            disabled={hour.is_closed}
-            onChange={(e) =>
-              updateBusinessHour(
-                hour.day_of_week,
-                'open_time',
-                e.target.value
-              )
-            }
-          />
-
-          <input
-            type="time"
-            value={hour.close_time?.slice(0, 5) || '18:00'}
-            disabled={hour.is_closed}
-            onChange={(e) =>
-              updateBusinessHour(
-                hour.day_of_week,
-                'close_time',
-                e.target.value
-              )
-            }
-          />
-        </div>
-      );
-    })}
-  </div>
-
-  <button
-    className="main-button hours-save-button"
-    onClick={handleSaveBusinessHours}
-    disabled={loading}
-  >
-    {loading ? 'Guardando...' : 'Guardar horario'}
-  </button>
-</div>
-
+           
               <div className="services-section">
                 <h2>Servicios disponibles</h2>
                 <p className="subtitle-left">
@@ -1007,6 +919,77 @@ if (hasConflict) {
     )}
   </div>
 </div>
+<div className="hours-section">
+  <h2>Horario del negocio</h2>
+  <p className="subtitle-left">
+    Definí los días y horas en que tus clientes pueden reservar.
+  </p>
+
+  <div className="hours-list">
+    {businessHours.map((hour) => {
+      const day = daysOfWeek.find(
+        (dayItem) => dayItem.value === hour.day_of_week
+      );
+
+      return (
+        <div className="hour-item" key={hour.day_of_week}>
+          <div className="hour-day">
+            <strong>{day?.label}</strong>
+          </div>
+
+          <label className="closed-check">
+            <input
+              type="checkbox"
+              checked={hour.is_closed}
+              onChange={(e) =>
+                updateBusinessHour(
+                  hour.day_of_week,
+                  'is_closed',
+                  e.target.checked
+                )
+              }
+            />
+            Cerrado
+          </label>
+
+          <input
+            type="time"
+            value={hour.open_time?.slice(0, 5) || '09:00'}
+            disabled={hour.is_closed}
+            onChange={(e) =>
+              updateBusinessHour(
+                hour.day_of_week,
+                'open_time',
+                e.target.value
+              )
+            }
+          />
+
+          <input
+            type="time"
+            value={hour.close_time?.slice(0, 5) || '18:00'}
+            disabled={hour.is_closed}
+            onChange={(e) =>
+              updateBusinessHour(
+                hour.day_of_week,
+                'close_time',
+                e.target.value
+              )
+            }
+          />
+        </div>
+      );
+    })}
+  </div>
+
+  <button
+    className="main-button hours-save-button"
+    onClick={handleSaveBusinessHours}
+    disabled={loading}
+  >
+    {loading ? 'Guardando...' : 'Guardar horario'}
+  </button>
+</div>
 
           <div className="services-section">
             <h2>Servicios</h2>
@@ -1218,6 +1201,6 @@ if (hasConflict) {
       </div>
     </div>
   );
-}
+
 
 export default App;
