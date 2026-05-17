@@ -500,8 +500,8 @@ async function loadAvailableTimes() {
   try {
     setMessage('');
 
-    const selectedDay = new Date(`${appointmentDate}T00:00:00`).getDay();
-
+    const [year, month, day] = appointmentDate.split('-').map(Number);
+    const selectedDay = new Date(year, month - 1, day).getDay();
     const { data: daySchedule, error: hoursError } = await supabase
       .from('business_hours')
       .select('*')
@@ -619,7 +619,8 @@ async function loadAvailableTimes() {
 
       const endTime = endDate.toTimeString().slice(0, 5);
 
-      const appointmentDay = new Date(`${appointmentDate}T00:00:00`).getDay();
+      const [year, month, day] = appointmentDate.split('-').map(Number);
+      const appointmentDay = new Date(year, month - 1, day).getDay();
       const daySchedule = businessHours.find(
         (hour) => hour.day_of_week === appointmentDay
       );
