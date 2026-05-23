@@ -2,7 +2,19 @@ import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import './App.css';
 
-function App() {
+function getDefaultBusinessHours(businessId) {
+  return [
+    { business_id: businessId, day_of_week: 0, open_time: '09:00', close_time: '17:00', is_closed: false },
+    { business_id: businessId, day_of_week: 1, open_time: '09:00', close_time: '18:00', is_closed: false },
+    { business_id: businessId, day_of_week: 2, open_time: '09:00', close_time: '18:00', is_closed: false },
+    { business_id: businessId, day_of_week: 3, open_time: '09:00', close_time: '18:00', is_closed: false },
+    { business_id: businessId, day_of_week: 4, open_time: '09:00', close_time: '18:00', is_closed: false },
+    { business_id: businessId, day_of_week: 5, open_time: '09:00', close_time: '18:00', is_closed: false },
+    { business_id: businessId, day_of_week: 6, open_time: '09:00', close_time: '17:00', is_closed: false }
+  ];
+}
+
+function App() {}
   const daysOfWeek = [
     { value: 0, label: 'Domingo' },
     { value: 1, label: 'Lunes' },
@@ -238,8 +250,21 @@ function App() {
       return;
     }
 
-    setClients(data || []);
+    const uniqueClients = [];
+
+(data || []).forEach((client) => {
+  const cleanPhone = normalizePhone(client.phone || '');
+
+  const alreadyExists = uniqueClients.some(
+    (savedClient) => normalizePhone(savedClient.phone || '') === cleanPhone
+  );
+
+  if (!alreadyExists) {
+    uniqueClients.push(client);
   }
+});
+
+setClients(uniqueClients);
 
   async function loadBusinessHours(businessId) {
     const { data, error } = await supabase
@@ -622,6 +647,10 @@ function App() {
     }
   }
 
+function normalizePhone(phone) {
+  return phone.replace(/\D/g, '');
+}
+
   async function handleCreateAppointment(e) {
     e.preventDefault();
     setMessage('');
@@ -696,19 +725,35 @@ function App() {
         throw new Error('Esa hora ya está ocupada. Elegí otra hora.');
       }
 
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .insert({
-          business_id: business.id,
-          name: clientName,
-          phone: clientPhone,
-        })
-        .select()
-        .single();
+const cleanClientPhone = normalizePhone(clientPhone);
 
-      if (clientError) throw clientError;
+const { data: existingClients, error: existingClientError } = await supabase
+  .from('clients')
+  .select('*')
+  .eq('business_id', business.id);
 
-      setClients([clientData, ...clients]);
+if (existingClientError) throw existingClientError;
+
+let clientData = existingClients?.find(
+  (client) => normalizePhone(client.phone || '') === cleanClientPhone
+);
+
+if (!clientData) {
+  const { data: newClient, error: clientError } = await supabase
+    .from('clients')
+    .insert({
+      business_id: business.id,
+      name: clientName,
+      phone: cleanClientPhone,
+    })
+    .select()
+    .single();
+
+  if (clientError) throw clientError;
+
+  clientData = newClient;
+  setClients([clientData, ...clients]);
+}
 
       const { error: appointmentError } = await supabase
         .from('appointments')
@@ -1448,6 +1493,7 @@ function App() {
       </div>
     </div>
   );
-}
+  }
+
 
 export default App;
