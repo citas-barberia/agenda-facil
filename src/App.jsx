@@ -597,13 +597,11 @@ async function loadClients(businessId) {
         );
       }
 
-      const { data: existingAppointments, error: appointmentsError } =
-        await supabase
-          .from('appointments')
-          .select('*')
-          .eq('business_id', business.id)
-          .eq('appointment_date', appointmentDate)
-          .neq('status', 'cancelled');
+const { data: existingAppointments, error: appointmentsError } =
+  await supabase.rpc('get_booked_slots', {
+    p_business_id: business.id,
+    p_appointment_date: appointmentDate,
+  });
 
       if (appointmentsError) throw appointmentsError;
 
@@ -701,12 +699,11 @@ function normalizePhone(phone) {
         }
       }
 
-      const { data: existingAppointments, error: checkError } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('business_id', business.id)
-        .eq('appointment_date', appointmentDate)
-        .neq('status', 'cancelled');
+const { data: existingAppointments, error: checkError } =
+  await supabase.rpc('get_booked_slots', {
+    p_business_id: business.id,
+    p_appointment_date: appointmentDate,
+  });
 
       if (checkError) throw checkError;
 
