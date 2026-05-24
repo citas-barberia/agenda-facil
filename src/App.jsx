@@ -2,70 +2,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import './App.css';
 
-function copyPublicLink() {
-  if (!business?.slug) return;
-
-  const publicLink = `${window.location.origin}/${business.slug}`;
-  navigator.clipboard.writeText(publicLink);
-  setMessage('Link público copiado.');
-}
-
-function getFilteredAppointments() {
-  let filtered = [...appointments];
-
-  if (appointmentFilterDate) {
-    filtered = filtered.filter(
-      (appointment) => appointment.appointment_date === appointmentFilterDate
-    );
-  }
-
-  return filtered.sort((a, b) => {
-    const today = getTodayDateString();
-
-    if (a.appointment_date === today && b.appointment_date !== today) return -1;
-    if (a.appointment_date !== today && b.appointment_date === today) return 1;
-
-    return `${a.appointment_date} ${a.start_time}`.localeCompare(
-      `${b.appointment_date} ${b.start_time}`
-    );
-  });
-}
-
-function getTodayIncome() {
-  const today = getTodayDateString();
-
-  return appointments
-    .filter(
-      (appointment) =>
-        appointment.appointment_date === today &&
-        appointment.status !== 'cancelled'
-    )
-    .reduce(
-      (total, appointment) => total + Number(appointment.total_price || 0),
-      0
-    );
-}
-
-function getMonthIncome() {
-  const today = new Date();
-  const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
-  const currentYear = String(today.getFullYear());
-
-  return appointments
-    .filter((appointment) => {
-      const [year, month] = appointment.appointment_date.split('-');
-
-      return (
-        year === currentYear &&
-        month === currentMonth &&
-        appointment.status !== 'cancelled'
-      );
-    })
-    .reduce(
-      (total, appointment) => total + Number(appointment.total_price || 0),
-      0
-    );
-}
 
 function getDefaultBusinessHours(businessId) {
   return [
@@ -126,6 +62,71 @@ const [appointmentFilterDate, setAppointmentFilterDate] = useState('');
     const day = String(today.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+  }
+
+  function copyPublicLink() {
+    if (!business?.slug) return;
+
+    const publicLink = `${window.location.origin}/${business.slug}`;
+    navigator.clipboard.writeText(publicLink);
+    setMessage('Link público copiado.');
+  }
+
+  function getFilteredAppointments() {
+    let filtered = [...appointments];
+
+    if (appointmentFilterDate) {
+      filtered = filtered.filter(
+        (appointment) => appointment.appointment_date === appointmentFilterDate
+      );
+    }
+
+    return filtered.sort((a, b) => {
+      const today = getTodayDateString();
+
+      if (a.appointment_date === today && b.appointment_date !== today) return -1;
+      if (a.appointment_date !== today && b.appointment_date === today) return 1;
+
+      return `${a.appointment_date} ${a.start_time}`.localeCompare(
+        `${b.appointment_date} ${b.start_time}`
+      );
+    });
+  }
+
+  function getTodayIncome() {
+    const today = getTodayDateString();
+
+    return appointments
+      .filter(
+        (appointment) =>
+          appointment.appointment_date === today &&
+          appointment.status !== 'cancelled'
+      )
+      .reduce(
+        (total, appointment) => total + Number(appointment.total_price || 0),
+        0
+      );
+  }
+
+  function getMonthIncome() {
+    const today = new Date();
+    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const currentYear = String(today.getFullYear());
+
+    return appointments
+      .filter((appointment) => {
+        const [year, month] = appointment.appointment_date.split('-');
+
+        return (
+          year === currentYear &&
+          month === currentMonth &&
+          appointment.status !== 'cancelled'
+        );
+      })
+      .reduce(
+        (total, appointment) => total + Number(appointment.total_price || 0),
+        0
+      );
   }
 
   async function getBusinessScheduleForDate(businessId, dateString) {
