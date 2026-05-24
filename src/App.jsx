@@ -1109,60 +1109,77 @@ if (!clientData) {
                           WhatsApp
                         </a>
 
-                        {appointment.status !== 'confirmed' && (
-                          <button
-                            className="action-button confirm"
-                            onClick={() =>
-                              updateAppointmentStatus(
-                                appointment.id,
-                                'confirmed'
-                              )
-                            }
-                            disabled={loading}
-                          >
-                            Confirmar
-                          </button>
+                        {appointment.status === 'pending' && (
+                          <>
+                            <button
+                              className="action-button confirm"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'confirmed'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Confirmar
+                            </button>
+
+                            <button
+                              className="action-button cancel"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'cancelled'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Cancelar
+                            </button>
+                          </>
                         )}
 
-                        {appointment.status !== 'completed' && (
-                          <button
-                            className="action-button complete"
-                            onClick={() =>
-                              updateAppointmentStatus(
-                                appointment.id,
-                                'completed'
-                              )
-                            }
-                            disabled={loading}
-                          >
-                            Completar
-                          </button>
+                        {appointment.status === 'confirmed' && (
+                          <>
+                            <button
+                              className="action-button complete"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'completed'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Completar
+                            </button>
+
+                            <button
+                              className="action-button cancel"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'cancelled'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Cancelar
+                            </button>
+                          </>
                         )}
 
-                        {appointment.status !== 'cancelled' && (
-                          <button
-                            className="action-button cancel"
-                            onClick={() =>
-                              updateAppointmentStatus(
-                                appointment.id,
-                                'cancelled'
-                              )
-                            }
-                            disabled={loading}
-                          >
-                            Cancelar
-                          </button>
+                        {appointment.status === 'completed' && (
+                          <span className="appointment-final-text">
+                            Cita completada
+                          </span>
                         )}
 
-                        <button
-                          className="action-button delete"
-                          onClick={() =>
-                            handleDeleteAppointment(appointment.id)
-                          }
-                          disabled={loading}
-                        >
-                          Eliminar cita
-                        </button>
+                        {appointment.status === 'cancelled' && (
+                          <span className="appointment-final-text">
+                            Cita cancelada
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1170,7 +1187,6 @@ if (!clientData) {
               )}
             </div>
           </div>
-
           <div className="clients-section">
             <h2>Clientes</h2>
             <p className="subtitle-left">

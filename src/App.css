@@ -531,3 +531,13 @@ select:focus {
     grid-template-columns: 1fr;
   }
 }
+.appointment-final-text {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: #1e293b;
+  text-align: center;
+}
