@@ -795,48 +795,17 @@ const { data: existingAppointments, error: checkError } =
         throw new Error('Esa hora ya está ocupada. Elegí otra hora.');
       }
 
-const cleanClientPhone = normalizePhone(clientPhone);
-
-const { data: existingClients, error: existingClientError } = await supabase
-  .from('clients')
-  .select('*')
-  .eq('business_id', business.id);
-
-if (existingClientError) throw existingClientError;
-
-let clientData = existingClients?.find(
-  (client) => normalizePhone(client.phone || '') === cleanClientPhone
-);
-
-if (!clientData) {
-  const { data: newClient, error: clientError } = await supabase
-    .from('clients')
-    .insert({
-      business_id: business.id,
-      name: clientName,
-      phone: cleanClientPhone,
-    })
-    .select()
-    .single();
-
-  if (clientError) throw clientError;
-
-  clientData = newClient;
-  setClients([clientData, ...clients]);
-}
-
-      const { error: appointmentError } = await supabase
-        .from('appointments')
-        .insert({
-          business_id: business.id,
-          service_id: selectedService.id,
-          client_id: clientData.id,
-          appointment_date: appointmentDate,
-          start_time: appointmentTime,
-          end_time: endTime,
-          status: 'pending',
-          total_price: selectedService.price,
-        });
+      const { error: appointmentError } = await supabase.rpc(
+        'create_public_appointment',
+        {
+          p_business_id: business.id,
+          p_service_id: selectedService.id,
+          p_client_name: clientName,
+          p_client_phone: clientPhone,
+          p_appointment_date: appointmentDate,
+          p_start_time: appointmentTime,
+        }
+      );
 
       if (appointmentError) throw appointmentError;
 
