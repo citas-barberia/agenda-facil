@@ -28,15 +28,7 @@ function App() {}
   const SLOT_INTERVAL_MINUTES = 30;
   const MIN_LEAD_MINUTES = 30;
 
-  function getDefaultBusinessHours(businessId) {
-    return daysOfWeek.map((day) => ({
-      business_id: businessId,
-      day_of_week: day.value,
-      open_time: '09:00',
-      close_time: day.value === 0 ? '17:00' : '18:00',
-      is_closed: day.value === 0,
-    }));
-  }
+
 
   function getDayOfWeekFromDate(dateString) {
     const [year, month, day] = dateString.split('-').map(Number);
