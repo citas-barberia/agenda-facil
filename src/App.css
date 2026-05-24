@@ -588,3 +588,40 @@ select:focus {
   margin-bottom: 18px;
   border: 1px solid #334155;
 }
+.main-button,
+.small-button,
+.action-button.confirm,
+.edit-service-button {
+  background: var(--primary-color, #2563eb);
+}
+
+.main-button:hover,
+.small-button:hover,
+.action-button.confirm:hover,
+.edit-service-button:hover {
+  filter: brightness(1.08);
+}
+
+.info-box {
+  border-color: var(--primary-color, #2563eb);
+}
+
+.status-badge.confirmed {
+  background: var(--primary-color, #2563eb);
+  color: white;
+}
+
+.business-logo {
+  border-color: var(--primary-color, #2563eb);
+}
+
+.tabs button.active {
+  background: var(--primary-color, #2563eb);
+  color: white;
+}
+
+input[type="color"] {
+  height: 48px;
+  cursor: pointer;
+  padding: 4px;
+}

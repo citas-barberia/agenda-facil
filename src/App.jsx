@@ -980,9 +980,12 @@ async function handleUpdateBusiness(e) {
     setMessage('');
   }
 
-  if (isPublicPage) {
-    return (
-      <div className="page">
+if (isPublicPage) {
+  return (
+    <div
+      className="page"
+      style={{ '--primary-color': business?.primary_color || '#2563eb' }}
+    >
         <div className="dashboard-card">
           {business ? (
             <>
@@ -1150,10 +1153,13 @@ async function handleUpdateBusiness(e) {
     );
   }
 
-  if (session && business) {
-    return (
-      <div className="page">
-        <div className="dashboard-card">
+if (session && business) {
+  return (
+    <div
+      className="page"
+      style={{ '--primary-color': business.primary_color || '#2563eb' }}
+    >
+      <div className="dashboard-card">
           <div className="dashboard-header">
             <div>
               <h1>{business.name}</h1>
