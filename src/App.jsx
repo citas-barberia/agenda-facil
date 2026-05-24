@@ -887,19 +887,41 @@ const { data: existingAppointments, error: checkError } =
     }
   }
 
-  function getWhatsAppLink(appointment) {
-    const phone = appointment.clients?.phone?.replace(/\D/g, '') || '';
-    const finalPhone = phone.startsWith('506') ? phone : `506${phone}`;
+function getWhatsAppLink(appointment) {
+  const phone = appointment.clients?.phone?.replace(/\D/g, '') || '';
+  const finalPhone = phone.startsWith('506') ? phone : `506${phone}`;
 
-    const text = `Hola ${appointment.clients?.name || ''}, tu cita para ${
-      appointment.services?.name || 'el servicio'
-    } el día ${appointment.appointment_date} a las ${appointment.start_time?.slice(
-      0,
-      5
-    )} está registrada.`;
+  const clientName = appointment.clients?.name || '';
+  const serviceName = appointment.services?.name || 'el servicio';
+  const date = appointment.appointment_date;
+  const startTime = appointment.start_time?.slice(0, 5);
+  const endTime = appointment.end_time?.slice(0, 5);
+  const businessName = business?.name || 'nuestro negocio';
 
-    return `https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`;
+  let text = '';
+
+  if (appointment.status === 'pending') {
+    text = `Hola ${clientName}, te saludamos de ${businessName}. Tu cita para ${serviceName} el día ${date} de ${startTime} a ${endTime} fue registrada correctamente. En breve te confirmaremos la disponibilidad.`;
   }
+
+  if (appointment.status === 'confirmed') {
+    text = `Hola ${clientName}, te confirmamos tu cita en ${businessName}. Servicio: ${serviceName}. Fecha: ${date}. Hora: ${startTime} a ${endTime}. Te esperamos.`;
+  }
+
+  if (appointment.status === 'completed') {
+    text = `Hola ${clientName}, gracias por visitarnos en ${businessName}. Esperamos que hayas disfrutado tu servicio de ${serviceName}. Será un gusto atenderte nuevamente.`;
+  }
+
+  if (appointment.status === 'cancelled') {
+    text = `Hola ${clientName}, te informamos que tu cita para ${serviceName} el día ${date} a las ${startTime} fue cancelada. Podés escribirnos para coordinar una nueva fecha.`;
+  }
+
+  if (!text) {
+    text = `Hola ${clientName}, te contactamos de ${businessName} sobre tu cita para ${serviceName} el día ${date} a las ${startTime}.`;
+  }
+
+  return `https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`;
+}
 
 async function handleUpdateBusiness(e) {
   e.preventDefault();
