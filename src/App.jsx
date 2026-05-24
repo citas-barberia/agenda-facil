@@ -14,7 +14,7 @@ function getDefaultBusinessHours(businessId) {
   ];
 }
 
-function App() {}
+function App() {
   const daysOfWeek = [
     { value: 0, label: 'Domingo' },
     { value: 1, label: 'Lunes' },
@@ -229,35 +229,39 @@ function App() {}
     setAppointments(data || []);
   }
 
-  async function loadClients(businessId) {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('business_id', businessId)
-      .order('created_at', { ascending: false });
+function normalizePhone(phone) {
+  return phone.replace(/\D/g, '');
+}
 
-    if (error) {
-      console.error('Error cargando clientes:', error);
-      setMessage(error.message);
-      return;
-    }
+async function loadClients(businessId) {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false });
 
-    const uniqueClients = [];
-
-(data || []).forEach((client) => {
-  const cleanPhone = normalizePhone(client.phone || '');
-
-  const alreadyExists = uniqueClients.some(
-    (savedClient) => normalizePhone(savedClient.phone || '') === cleanPhone
-  );
-
-  if (!alreadyExists) {
-    uniqueClients.push(client);
+  if (error) {
+    console.error('Error cargando clientes:', error);
+    setMessage(error.message);
+    return;
   }
-});
 
-setClients(uniqueClients);
+  const uniqueClients = [];
 
+  (data || []).forEach((client) => {
+    const cleanPhone = normalizePhone(client.phone || '');
+
+    const alreadyExists = uniqueClients.some(
+      (savedClient) => normalizePhone(savedClient.phone || '') === cleanPhone
+    );
+
+    if (!alreadyExists) {
+      uniqueClients.push(client);
+    }
+  });
+
+  setClients(uniqueClients);
+}
   async function loadBusinessHours(businessId) {
     const { data, error } = await supabase
       .from('business_hours')
