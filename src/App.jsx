@@ -184,6 +184,10 @@ const [appointmentFilterDate, setAppointmentFilterDate] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+const [businessDescription, setBusinessDescription] = useState('');
+const [businessLogoUrl, setBusinessLogoUrl] = useState('');
+const [businessPrimaryColor, setBusinessPrimaryColor] = useState('#2563eb');
+
   useEffect(() => {
     if (isPublicPage) {
       loadPublicBusiness(currentPath);
@@ -221,6 +225,13 @@ const [appointmentFilterDate, setAppointmentFilterDate] = useState('');
     setBusiness(data);
 
     if (data) {
+  setBusinessName(data.name || '');
+  setBusinessPhone(data.phone || '');
+  setBusinessAddress(data.address || '');
+  setBusinessDescription(data.description || '');
+  setBusinessLogoUrl(data.logo_url || '');
+  setBusinessPrimaryColor(data.primary_color || '#2563eb');
+
       await loadServices(data.id);
       await loadAppointments(data.id);
       await loadClients(data.id);
@@ -921,6 +932,42 @@ if (!clientData) {
     return `https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`;
   }
 
+async function handleUpdateBusiness(e) {
+  e.preventDefault();
+  setMessage('');
+  setLoading(true);
+
+  try {
+    if (!business?.id) {
+      throw new Error('No hay negocio seleccionado.');
+    }
+
+    const { data, error } = await supabase
+      .from('businesses')
+      .update({
+        name: businessName,
+        phone: businessPhone,
+        address: businessAddress,
+        description: businessDescription,
+        logo_url: businessLogoUrl,
+        primary_color: businessPrimaryColor,
+      })
+      .eq('id', business.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    setBusiness(data);
+    setMessage('Configuración del negocio actualizada correctamente.');
+  } catch (error) {
+    console.error('Error actualizando negocio:', error);
+    setMessage(error.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
   async function handleLogout() {
     await supabase.auth.signOut();
     setSession(null);
@@ -941,11 +988,24 @@ if (!clientData) {
             <>
               <div className="dashboard-header">
                 <div>
-                  <h1>{business.name}</h1>
-                  <p className="subtitle">{business.address}</p>
-                  <p className="subtitle">WhatsApp: {business.phone}</p>
+                    {business.logo_url && (
+                      <img
+                        className="business-logo"
+                        src={business.logo_url}
+                        alt={`Logo de ${business.name}`}
+                      />
+                    )}
+
+                    <h1>{business.name}</h1>
+
+                    {business.description && (
+                      <p className="subtitle">{business.description}</p>
+                    )}
+
+                    <p className="subtitle">{business.address}</p>
+                    <p className="subtitle">WhatsApp: {business.phone}</p>
+                  </div>
                 </div>
-              </div>
 
               <div className="services-section">
                 <h2>Servicios disponibles</h2>
@@ -1315,7 +1375,63 @@ if (!clientData) {
               )}
             </div>
           </div>
+<div className="business-settings-section">
+  <h2>Configuración del negocio</h2>
+  <p className="subtitle-left">
+    Personalizá la información que verán tus clientes.
+  </p>
 
+  <form className="business-settings-form" onSubmit={handleUpdateBusiness}>
+    <label>Nombre del negocio</label>
+    <input
+      type="text"
+      value={businessName}
+      onChange={(e) => setBusinessName(e.target.value)}
+      required
+    />
+
+    <label>WhatsApp</label>
+    <input
+      type="text"
+      value={businessPhone}
+      onChange={(e) => setBusinessPhone(e.target.value)}
+    />
+
+    <label>Dirección</label>
+    <input
+      type="text"
+      value={businessAddress}
+      onChange={(e) => setBusinessAddress(e.target.value)}
+    />
+
+    <label>Descripción</label>
+    <textarea
+      value={businessDescription}
+      onChange={(e) => setBusinessDescription(e.target.value)}
+      placeholder="Ej: Barbería especializada en cortes modernos y clásicos."
+      rows="3"
+    />
+
+    <label>Logo URL</label>
+    <input
+      type="text"
+      value={businessLogoUrl}
+      onChange={(e) => setBusinessLogoUrl(e.target.value)}
+      placeholder="https://..."
+    />
+
+    <label>Color principal</label>
+    <input
+      type="color"
+      value={businessPrimaryColor}
+      onChange={(e) => setBusinessPrimaryColor(e.target.value)}
+    />
+
+    <button className="main-button" type="submit" disabled={loading}>
+      {loading ? 'Guardando...' : 'Guardar configuración'}
+    </button>
+  </form>
+</div>
           <div className="hours-section">
             <h2>Horario del negocio</h2>
             <p className="subtitle-left">
