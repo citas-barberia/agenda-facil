@@ -541,3 +541,17 @@ select:focus {
   background: #1e293b;
   text-align: center;
 }
+.filter-box {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+}
+
+.filter-box label {
+  font-weight: 700;
+  color: #e5e7eb;
+}

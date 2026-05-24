@@ -2,6 +2,71 @@ import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import './App.css';
 
+function copyPublicLink() {
+  if (!business?.slug) return;
+
+  const publicLink = `${window.location.origin}/${business.slug}`;
+  navigator.clipboard.writeText(publicLink);
+  setMessage('Link público copiado.');
+}
+
+function getFilteredAppointments() {
+  let filtered = [...appointments];
+
+  if (appointmentFilterDate) {
+    filtered = filtered.filter(
+      (appointment) => appointment.appointment_date === appointmentFilterDate
+    );
+  }
+
+  return filtered.sort((a, b) => {
+    const today = getTodayDateString();
+
+    if (a.appointment_date === today && b.appointment_date !== today) return -1;
+    if (a.appointment_date !== today && b.appointment_date === today) return 1;
+
+    return `${a.appointment_date} ${a.start_time}`.localeCompare(
+      `${b.appointment_date} ${b.start_time}`
+    );
+  });
+}
+
+function getTodayIncome() {
+  const today = getTodayDateString();
+
+  return appointments
+    .filter(
+      (appointment) =>
+        appointment.appointment_date === today &&
+        appointment.status !== 'cancelled'
+    )
+    .reduce(
+      (total, appointment) => total + Number(appointment.total_price || 0),
+      0
+    );
+}
+
+function getMonthIncome() {
+  const today = new Date();
+  const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+  const currentYear = String(today.getFullYear());
+
+  return appointments
+    .filter((appointment) => {
+      const [year, month] = appointment.appointment_date.split('-');
+
+      return (
+        year === currentYear &&
+        month === currentMonth &&
+        appointment.status !== 'cancelled'
+      );
+    })
+    .reduce(
+      (total, appointment) => total + Number(appointment.total_price || 0),
+      0
+    );
+}
+
 function getDefaultBusinessHours(businessId) {
   return [
     { business_id: businessId, day_of_week: 0, open_time: '09:00', close_time: '17:00', is_closed: false },
@@ -28,7 +93,7 @@ function App() {
   const SLOT_INTERVAL_MINUTES = 30;
   const MIN_LEAD_MINUTES = 30;
 
-
+const [appointmentFilterDate, setAppointmentFilterDate] = useState('');
 
   function getDayOfWeekFromDate(dateString) {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -1040,39 +1105,69 @@ if (!clientData) {
           </div>
 
           <div className="info-box">
-            <p>
-              <strong>Link público:</strong>
-            </p>
-            <p>
-              {window.location.origin}/{business.slug}
-            </p>
-          </div>
+  <p>
+    <strong>Link público:</strong>
+  </p>
 
+  <p>{window.location.origin}/{business.slug}</p>
+
+  <button className="small-button" onClick={copyPublicLink}>
+    Copiar link
+  </button>
+</div>
           {message && <p className="message">{message}</p>}
 
-          <div className="grid">
-            <div className="mini-card">
-              <h3>Citas</h3>
-              <p>{appointments.length} citas registradas.</p>
-            </div>
+<div className="grid">
+  <div className="mini-card">
+    <h3>Citas</h3>
+    <p>{appointments.length} citas registradas.</p>
+  </div>
 
-            <div className="mini-card">
-              <h3>Clientes</h3>
-              <p>{clients.length} clientes registrados.</p>
-            </div>
-          </div>
+  <div className="mini-card">
+    <h3>Clientes</h3>
+    <p>{clients.length} clientes registrados.</p>
+  </div>
+
+  <div className="mini-card">
+    <h3>Ingresos hoy</h3>
+    <p>₡{getTodayIncome().toLocaleString('es-CR')}</p>
+  </div>
+
+  <div className="mini-card">
+    <h3>Ingresos del mes</h3>
+    <p>₡{getMonthIncome().toLocaleString('es-CR')}</p>
+  </div>
+</div>
 
           <div className="appointments-section">
             <h2>Citas recientes</h2>
             <p className="subtitle-left">
               Estas son las reservas que han hecho tus clientes.
             </p>
+<div className="filter-box">
+  <label>Filtrar citas por fecha</label>
 
+  <input
+    type="date"
+    value={appointmentFilterDate}
+    onChange={(e) => setAppointmentFilterDate(e.target.value)}
+  />
+
+  {appointmentFilterDate && (
+    <button
+      type="button"
+      className="secondary-button"
+      onClick={() => setAppointmentFilterDate('')}
+    >
+      Limpiar filtro
+    </button>
+  )}
+</div>
             <div className="appointments-list">
-              {appointments.length === 0 ? (
+              {getFilteredAppointments().length === 0 ? (
                 <p className="empty-text">Todavía no hay citas reservadas.</p>
               ) : (
-                appointments.map((appointment) => (
+                getFilteredAppointments().map((appointment) => (
                   <div className="appointment-item" key={appointment.id}>
                     <div>
                       <h3>
