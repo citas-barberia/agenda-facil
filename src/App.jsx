@@ -1660,7 +1660,7 @@ if (session && business) {
       <div className="auth-card">
         <h1>Agenda Fácil</h1>
         <p className="subtitle">
-          Sistema de reservas para barberías, salones y negocios por cita.
+          Reservas online simples para negocios, profesionales y servicios por cita.
         </p>
 
         <div className="tabs">
