@@ -149,8 +149,10 @@ const [appointmentFilterDate, setAppointmentFilterDate] = useState('');
     );
   }
 
-  const currentPath = window.location.pathname.split('/')[1] || '';
-  const isPublicPage = currentPath !== '';
+const currentPath = window.location.pathname.split('/')[1] || '';
+const isLandingPage = currentPath === '';
+const isAuthPage = currentPath === 'login';
+const isPublicPage = currentPath !== '' && currentPath !== 'login';
 
   const [mode, setMode] = useState('login');
   const [session, setSession] = useState(null);
@@ -971,12 +973,130 @@ async function handleUpdateBusiness(e) {
     setMessage('');
   }
 
+
+  if (isLandingPage) {
+    return (
+      <div className="page landing-page">
+        <div className="landing-card">
+          <div className="landing-hero">
+            <div>
+              <span className="landing-badge">Agenda Fácil</span>
+
+              <h1>Reservas online simples para negocios por cita</h1>
+
+              <p className="landing-subtitle">
+                Permití que tus clientes reserven desde un link, mientras vos
+                gestionás horarios, servicios, citas, clientes e ingresos desde
+                un panel privado.
+              </p>
+
+              <div className="landing-actions">
+                <a className="main-button landing-button" href="/login">
+                  Entrar al panel
+                </a>
+
+                <a
+                  className="secondary-button landing-button"
+                  href="https://wa.me/50672314147?text=Hola,%20quiero%20informaci%C3%B3n%20sobre%20Agenda%20F%C3%A1cil"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Pedir información
+                </a>
+              </div>
+            </div>
+
+            <div className="landing-preview">
+              <div className="preview-card">
+                <p className="preview-label">Panel privado</p>
+                <h3>12 citas registradas</h3>
+                <p>Ingresos del mes: ₡185,000</p>
+              </div>
+
+              <div className="preview-card">
+                <p className="preview-label">Link público</p>
+                <h3>Reservar cita</h3>
+                <p>Servicios, horarios disponibles y confirmación por WhatsApp.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="landing-section">
+            <h2>Ideal para negocios y profesionales que trabajan por cita</h2>
+
+            <div className="landing-grid">
+              <div className="landing-feature">
+                <h3>Reservas desde un link</h3>
+                <p>
+                  Compartí tu link por WhatsApp, Instagram o Facebook para que
+                  tus clientes puedan reservar.
+                </p>
+              </div>
+
+              <div className="landing-feature">
+                <h3>Panel privado</h3>
+                <p>
+                  Gestioná citas, clientes, horarios, servicios e ingresos desde
+                  un solo lugar.
+                </p>
+              </div>
+
+              <div className="landing-feature">
+                <h3>Horarios inteligentes</h3>
+                <p>
+                  El sistema muestra solo horas disponibles y evita reservas
+                  duplicadas.
+                </p>
+              </div>
+
+              <div className="landing-feature">
+                <h3>WhatsApp integrado</h3>
+                <p>
+                  Contactá clientes con mensajes listos para confirmar, cancelar
+                  o dar seguimiento.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="landing-section">
+            <h2>Funciona para muchos tipos de negocio</h2>
+
+            <div className="business-types">
+              <span>Barberías</span>
+              <span>Salones</span>
+              <span>Uñas</span>
+              <span>Estética</span>
+              <span>Masajes</span>
+              <span>Consultorios</span>
+              <span>Técnicos</span>
+              <span>Entrenadores</span>
+              <span>Servicios a domicilio</span>
+            </div>
+          </div>
+
+          <div className="landing-cta">
+            <h2>Empezá a recibir reservas de forma más ordenada</h2>
+            <p>
+              Agenda Fácil ayuda a negocios pequeños a verse más profesionales y
+              ahorrar tiempo gestionando citas.
+            </p>
+
+            <a className="main-button landing-button" href="/login">
+              Crear mi cuenta
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 if (isPublicPage) {
+  if (isAuthPage) {
   return (
-    <div
-      className="page"
+    <div className="page">
       style={{ '--primary-color': business?.primary_color || '#2563eb' }}
-    >
+
         <div className="dashboard-card">
           {business ? (
             <>
@@ -1710,8 +1830,10 @@ if (session && business) {
         {message && <p className="message">{message}</p>}
       </div>
     </div>
-  );
-  }
+    );
+}
 
+return null;
+}
 
 export default App;
