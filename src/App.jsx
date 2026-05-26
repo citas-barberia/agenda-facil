@@ -148,11 +148,12 @@ const [appointmentFilterDate, setAppointmentFilterDate] = useState('');
       )
     );
   }
-
 const currentPath = window.location.pathname.split('/')[1] || '';
 const isLandingPage = currentPath === '';
 const isAuthPage = currentPath === 'login';
-const isPublicPage = currentPath !== '' && currentPath !== 'login';
+const isPanelPage = currentPath === 'panel';
+const isPublicPage =
+  currentPath !== '' && currentPath !== 'login' && currentPath !== 'panel';
 
   const [mode, setMode] = useState('login');
   const [session, setSession] = useState(null);
@@ -463,6 +464,7 @@ async function loadClients(businessId) {
 
         setSession(data.session);
         await loadBusiness(data.session.user.id);
+        window.history.pushState({}, '', '/panel');
       }
     } catch (error) {
       console.error('Error auth:', error);
@@ -1091,6 +1093,582 @@ async function handleUpdateBusiness(e) {
     );
   }
 
+  if ((isPanelPage || isAuthPage) && session && business) {
+    return (
+      <div
+        className="page"
+        style={{ '--primary-color': business.primary_color || '#2563eb' }}
+      >
+        <div className="dashboard-card">
+          <div className="dashboard-header">
+            <div>
+              <h1>{business.name}</h1>
+              <p className="subtitle">Panel principal de tu negocio</p>
+            </div>
+
+            <button className="logout-button" onClick={handleLogout}>
+              Salir
+            </button>
+          </div>
+
+          <div className="info-box">
+            <p>
+              <strong>Link público:</strong>
+            </p>
+
+            <p>{window.location.origin}/{business.slug}</p>
+
+            <button className="small-button" onClick={copyPublicLink}>
+              Copiar link
+            </button>
+          </div>
+
+          {message && <p className="message">{message}</p>}
+
+          <div className="grid">
+            <div className="mini-card">
+              <h3>Citas</h3>
+              <p>{appointments.length} citas registradas.</p>
+            </div>
+
+            <div className="mini-card">
+              <h3>Clientes</h3>
+              <p>{clients.length} clientes registrados.</p>
+            </div>
+
+            <div className="mini-card">
+              <h3>Ingresos hoy</h3>
+              <p>₡{getTodayIncome().toLocaleString('es-CR')}</p>
+            </div>
+
+            <div className="mini-card">
+              <h3>Ingresos del mes</h3>
+              <p>₡{getMonthIncome().toLocaleString('es-CR')}</p>
+            </div>
+          </div>
+
+          <div className="appointments-section">
+            <h2>Citas recientes</h2>
+            <p className="subtitle-left">
+              Estas son las reservas que han hecho tus clientes.
+            </p>
+
+            <div className="filter-box">
+              <label>Filtrar citas por fecha</label>
+
+              <input
+                type="date"
+                value={appointmentFilterDate}
+                onChange={(e) => setAppointmentFilterDate(e.target.value)}
+              />
+
+              {appointmentFilterDate && (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setAppointmentFilterDate('')}
+                >
+                  Limpiar filtro
+                </button>
+              )}
+            </div>
+
+            <div className="appointments-list">
+              {getFilteredAppointments().length === 0 ? (
+                <p className="empty-text">Todavía no hay citas reservadas.</p>
+              ) : (
+                getFilteredAppointments().map((appointment) => (
+                  <div className="appointment-item" key={appointment.id}>
+                    <div>
+                      <h3>
+                        {appointment.clients?.name || 'Cliente sin nombre'}
+                      </h3>
+                      <p>
+                        WhatsApp:{' '}
+                        {appointment.clients?.phone || 'Sin teléfono'}
+                      </p>
+                      <p>
+                        Servicio:{' '}
+                        {appointment.services?.name || 'Servicio eliminado'}
+                      </p>
+                    </div>
+
+                    <div className="appointment-info">
+                      <strong>{appointment.appointment_date}</strong>
+                      <p>
+                        {appointment.start_time?.slice(0, 5)} -{' '}
+                        {appointment.end_time?.slice(0, 5)}
+                      </p>
+
+                      <span className={`status-badge ${appointment.status}`}>
+                        {appointment.status}
+                      </span>
+
+                      <div className="appointment-actions">
+                        <a
+                          className="action-button whatsapp"
+                          href={getWhatsAppLink(appointment)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          WhatsApp
+                        </a>
+
+                        {appointment.status === 'pending' && (
+                          <>
+                            <button
+                              className="action-button confirm"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'confirmed'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Confirmar
+                            </button>
+
+                            <button
+                              className="action-button cancel"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'cancelled'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        )}
+
+                        {appointment.status === 'confirmed' && (
+                          <>
+                            <button
+                              className="action-button complete"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'completed'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Completar
+                            </button>
+
+                            <button
+                              className="action-button cancel"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  'cancelled'
+                                )
+                              }
+                              disabled={loading}
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        )}
+
+                        {appointment.status === 'completed' && (
+                          <span className="appointment-final-text">
+                            Cita completada
+                          </span>
+                        )}
+
+                        {appointment.status === 'cancelled' && (
+                          <span className="appointment-final-text">
+                            Cita cancelada
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="clients-section">
+            <h2>Clientes</h2>
+            <p className="subtitle-left">
+              Estos son los clientes que han reservado en tu negocio.
+            </p>
+
+            <div className="clients-list">
+              {clients.length === 0 ? (
+                <p className="empty-text">
+                  Todavía no hay clientes registrados.
+                </p>
+              ) : (
+                clients.map((client) => (
+                  <div className="client-item" key={client.id}>
+                    <div>
+                      <h3>{client.name}</h3>
+                      <p>WhatsApp: {client.phone}</p>
+                    </div>
+
+                    <a
+                      className="small-button client-whatsapp"
+                      href={`https://wa.me/506${client.phone?.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WhatsApp
+                    </a>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="business-settings-section">
+            <h2>Configuración del negocio</h2>
+            <p className="subtitle-left">
+              Personalizá la información que verán tus clientes.
+            </p>
+
+            <form className="business-settings-form" onSubmit={handleUpdateBusiness}>
+              <label>Nombre del negocio</label>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                required
+              />
+
+              <label>WhatsApp</label>
+              <input
+                type="text"
+                value={businessPhone}
+                onChange={(e) => setBusinessPhone(e.target.value)}
+              />
+
+              <label>Dirección</label>
+              <input
+                type="text"
+                value={businessAddress}
+                onChange={(e) => setBusinessAddress(e.target.value)}
+              />
+
+              <label>Descripción</label>
+              <textarea
+                value={businessDescription}
+                onChange={(e) => setBusinessDescription(e.target.value)}
+                placeholder="Ej: Servicio profesional por cita."
+                rows="3"
+              />
+
+              <label>Logo URL</label>
+              <input
+                type="text"
+                value={businessLogoUrl}
+                onChange={(e) => setBusinessLogoUrl(e.target.value)}
+                placeholder="https://..."
+              />
+
+              <label>Color principal</label>
+              <input
+                type="color"
+                value={businessPrimaryColor}
+                onChange={(e) => setBusinessPrimaryColor(e.target.value)}
+              />
+
+              <button className="main-button" type="submit" disabled={loading}>
+                {loading ? 'Guardando...' : 'Guardar configuración'}
+              </button>
+            </form>
+          </div>
+
+          <div className="hours-section">
+            <h2>Horario del negocio</h2>
+            <p className="subtitle-left">
+              Definí los días y horas en que tus clientes pueden reservar.
+            </p>
+
+            <div className="hours-list">
+              {businessHours.map((hour) => {
+                const day = daysOfWeek.find(
+                  (dayItem) => dayItem.value === hour.day_of_week
+                );
+
+                return (
+                  <div className="hour-item" key={hour.day_of_week}>
+                    <div className="hour-day">
+                      <strong>{day?.label}</strong>
+                    </div>
+
+                    <label className="closed-check">
+                      <input
+                        type="checkbox"
+                        checked={hour.is_closed}
+                        onChange={(e) =>
+                          updateBusinessHour(
+                            hour.day_of_week,
+                            'is_closed',
+                            e.target.checked
+                          )
+                        }
+                      />
+                      Cerrado
+                    </label>
+
+                    <input
+                      type="time"
+                      value={hour.open_time?.slice(0, 5) || '09:00'}
+                      disabled={hour.is_closed}
+                      onChange={(e) =>
+                        updateBusinessHour(
+                          hour.day_of_week,
+                          'open_time',
+                          e.target.value
+                        )
+                      }
+                    />
+
+                    <input
+                      type="time"
+                      value={hour.close_time?.slice(0, 5) || '18:00'}
+                      disabled={hour.is_closed}
+                      onChange={(e) =>
+                        updateBusinessHour(
+                          hour.day_of_week,
+                          'close_time',
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              className="main-button hours-save-button"
+              onClick={handleSaveBusinessHours}
+              disabled={loading}
+            >
+              {loading ? 'Guardando...' : 'Guardar horario'}
+            </button>
+          </div>
+
+          <div className="services-section">
+            <h2>Servicios</h2>
+            <p className="subtitle-left">
+              Agregá los servicios que tus clientes podrán reservar.
+            </p>
+
+            <form
+              className="service-form"
+              onSubmit={
+                editingService ? handleUpdateService : handleCreateService
+              }
+            >
+              <input
+                type="text"
+                placeholder="Nombre del servicio"
+                value={serviceName}
+                onChange={(e) => setServiceName(e.target.value)}
+                required
+              />
+
+              <input
+                type="number"
+                placeholder="Precio"
+                value={servicePrice}
+                onChange={(e) => setServicePrice(e.target.value)}
+                required
+              />
+
+              <input
+                type="number"
+                placeholder="Duración en minutos"
+                value={serviceDuration}
+                onChange={(e) => setServiceDuration(e.target.value)}
+                required
+              />
+
+              <button className="main-button" type="submit" disabled={loading}>
+                {loading
+                  ? 'Guardando...'
+                  : editingService
+                    ? 'Guardar cambios'
+                    : 'Agregar servicio'}
+              </button>
+
+              {editingService && (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={cancelEditService}
+                >
+                  Cancelar edición
+                </button>
+              )}
+            </form>
+
+            <div className="services-list">
+              {services.length === 0 ? (
+                <p className="empty-text">
+                  Todavía no tenés servicios creados.
+                </p>
+              ) : (
+                services.map((service) => (
+                  <div className="service-item" key={service.id}>
+                    <div>
+                      <h3>{service.name}</h3>
+                      <p>{service.duration_minutes} minutos</p>
+                    </div>
+
+                    <div className="service-actions">
+                      <strong>
+                        ₡{Number(service.price).toLocaleString('es-CR')}
+                      </strong>
+
+                      <button
+                        className="edit-service-button"
+                        onClick={() => startEditService(service)}
+                        disabled={loading}
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        className="delete-service-button"
+                        onClick={() => handleDeleteService(service.id)}
+                        disabled={loading}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if ((isPanelPage || isAuthPage) && session && !business) {
+    return (
+      <div className="page">
+        <div className="auth-card">
+          <h1>Crear negocio</h1>
+          <p className="subtitle">
+            Este será el perfil público donde tus clientes podrán reservar.
+          </p>
+
+          <form onSubmit={handleCreateBusiness}>
+            <label>Nombre del negocio</label>
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              required
+            />
+
+            <label>Link del negocio</label>
+            <input
+              type="text"
+              value={businessSlug}
+              onChange={(e) => setBusinessSlug(e.target.value)}
+              required
+            />
+
+            <label>WhatsApp</label>
+            <input
+              type="text"
+              value={businessPhone}
+              onChange={(e) => setBusinessPhone(e.target.value)}
+            />
+
+            <label>Dirección</label>
+            <input
+              type="text"
+              value={businessAddress}
+              onChange={(e) => setBusinessAddress(e.target.value)}
+            />
+
+            <button className="main-button" type="submit" disabled={loading}>
+              {loading ? 'Guardando...' : 'Crear negocio'}
+            </button>
+          </form>
+
+          <button className="secondary-button" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+
+          {message && <p className="message">{message}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthPage || isPanelPage) {
+    return (
+      <div className="page">
+        <div className="auth-card">
+          <h1>Agenda Fácil</h1>
+          <p className="subtitle">
+            Reservas online simples para negocios, profesionales y servicios por cita.
+          </p>
+
+          <div className="tabs">
+            <button
+              className={mode === 'login' ? 'active' : ''}
+              onClick={() => setMode('login')}
+            >
+              Iniciar sesión
+            </button>
+
+            <button
+              className={mode === 'register' ? 'active' : ''}
+              onClick={() => setMode('register')}
+            >
+              Registrarme
+            </button>
+          </div>
+
+          <form onSubmit={handleAuth}>
+            <label>Correo</label>
+            <input
+              type="email"
+              placeholder="ejemplo@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <label>Contraseña</label>
+            <input
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <button className="main-button" type="submit" disabled={loading}>
+              {loading
+                ? 'Cargando...'
+                : mode === 'login'
+                  ? 'Entrar'
+                  : 'Crear cuenta'}
+            </button>
+          </form>
+
+          {message && <p className="message">{message}</p>}
+        </div>
+      </div>
+    );
+  }
+
   if (isPublicPage) {
     return (
       <div
@@ -1262,66 +1840,6 @@ async function handleUpdateBusiness(e) {
     );
   }
 
-if (session && business) {
-  if (isAuthPage) {
-    return (
-      <div className="page">
-        <div className="auth-card">
-          <h1>Agenda Fácil</h1>
-          <p className="subtitle">
-            Reservas online simples para negocios, profesionales y servicios por cita.
-          </p>
-
-          <div className="tabs">
-            <button
-              className={mode === 'login' ? 'active' : ''}
-              onClick={() => setMode('login')}
-            >
-              Iniciar sesión
-            </button>
-
-            <button
-              className={mode === 'register' ? 'active' : ''}
-              onClick={() => setMode('register')}
-            >
-              Registrarme
-            </button>
-          </div>
-
-          <form onSubmit={handleAuth}>
-            <label>Correo</label>
-            <input
-              type="email"
-              placeholder="ejemplo@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <label>Contraseña</label>
-            <input
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <button className="main-button" type="submit" disabled={loading}>
-              {loading
-                ? 'Cargando...'
-                : mode === 'login'
-                  ? 'Entrar'
-                  : 'Crear cuenta'}
-            </button>
-          </form>
-
-          {message && <p className="message">{message}</p>}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page">
       <div className="auth-card">
@@ -1337,8 +1855,5 @@ if (session && business) {
     </div>
   );
 }
-}
-
-
 
 export default App;
