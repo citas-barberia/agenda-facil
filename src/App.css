@@ -1035,3 +1035,218 @@ input[type="color"] {
   background: linear-gradient(135deg, #1e293b, #0369a1);
   border: 1px solid #38bdf8;
 }
+.public-hero {
+  padding: 28px;
+  border-radius: 26px;
+  margin-bottom: 28px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+  position: relative;
+}
+
+.public-hero::before {
+  content: '';
+  position: absolute;
+  inset: -80px -80px auto auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: var(--primary-color, #2563eb);
+  opacity: 0.18;
+  filter: blur(10px);
+}
+
+.public-hero-top {
+  position: relative;
+  z-index: 1;
+}
+
+.business-logo-placeholder {
+  width: 88px;
+  height: 88px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  background: var(--primary-color, #2563eb);
+  color: white;
+  font-size: 36px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.public-business-type {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--primary-color, #2563eb);
+  margin-bottom: 8px;
+}
+
+.public-hero-content {
+  position: relative;
+  z-index: 1;
+  margin-top: 26px;
+  max-width: 560px;
+}
+
+.public-hero-content h2 {
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.05;
+  margin-bottom: 14px;
+  color: #f8fafc;
+}
+
+.public-hero-content p {
+  color: #cbd5e1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.public-hero-actions {
+  margin-top: 22px;
+}
+
+.public-hero-button {
+  text-decoration: none;
+  display: inline-flex;
+  width: auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+.public-feature-row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.public-feature-pill {
+  padding: 14px 10px;
+  border-radius: 18px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.public-feature-pill span {
+  font-size: 13px;
+  font-weight: 800;
+  color: #e5e7eb;
+}
+
+.public-contact-info {
+  position: relative;
+  z-index: 1;
+  margin-top: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.public-contact-info p {
+  color: #cbd5e1;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .public-feature-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .public-hero {
+    padding: 22px;
+  }
+}
+.theme-barberia-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(2, 6, 23, 0.92), rgba(17, 24, 39, 0.95)),
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.25), transparent 35%);
+}
+
+.theme-barberia-style_1 .public-business-type {
+  color: #f59e0b;
+}
+
+.theme-unas-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(255, 241, 242, 0.96), rgba(252, 231, 243, 0.96)),
+    radial-gradient(circle at top right, rgba(244, 114, 182, 0.35), transparent 35%);
+}
+
+.theme-unas-style_1 .public-hero-content h2,
+.theme-unas-style_1 .public-hero-content p,
+.theme-unas-style_1 .public-contact-info p {
+  color: #831843;
+}
+
+.theme-unas-style_1 .public-feature-pill {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.theme-unas-style_1 .public-feature-pill span {
+  color: #831843;
+}
+
+.theme-estetica-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(204, 251, 241, 0.92)),
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.35), transparent 35%);
+}
+
+.theme-estetica-style_1 .public-hero-content h2,
+.theme-estetica-style_1 .public-hero-content p,
+.theme-estetica-style_1 .public-contact-info p {
+  color: #134e4a;
+}
+
+.theme-masajes-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(120, 53, 15, 0.94), rgba(66, 32, 6, 0.96)),
+    radial-gradient(circle at top right, rgba(251, 191, 36, 0.35), transparent 35%);
+}
+
+.theme-consultorio-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.96), rgba(219, 234, 254, 0.96)),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.28), transparent 35%);
+}
+
+.theme-consultorio-style_1 .public-hero-content h2,
+.theme-consultorio-style_1 .public-hero-content p,
+.theme-consultorio-style_1 .public-contact-info p {
+  color: #1e3a8a;
+}
+
+.theme-grooming-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(254, 243, 199, 0.96), rgba(253, 230, 138, 0.92)),
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.35), transparent 35%);
+}
+
+.theme-grooming-style_1 .public-hero-content h2,
+.theme-grooming-style_1 .public-hero-content p,
+.theme-grooming-style_1 .public-contact-info p {
+  color: #451a03;
+}
+
+.theme-entrenador-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(2, 6, 23, 0.95), rgba(127, 29, 29, 0.92)),
+    radial-gradient(circle at top right, rgba(190, 242, 100, 0.22), transparent 35%);
+}
+
+.theme-domicilio-style_1 .public-hero {
+  background:
+    linear-gradient(135deg, rgba(250, 245, 255, 0.96), rgba(237, 233, 254, 0.95)),
+    radial-gradient(circle at top right, rgba(124, 58, 237, 0.28), transparent 35%);
+}
+
+.theme-domicilio-style_1 .public-hero-content h2,
+.theme-domicilio-style_1 .public-hero-content p,
+.theme-domicilio-style_1 .public-contact-info p {
+  color: #4c1d95;
+}

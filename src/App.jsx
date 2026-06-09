@@ -968,6 +968,67 @@ async function handleUpdateBusiness(e) {
   }
 }
 
+function getBusinessTypeContent(type) {
+  const content = {
+    general: {
+      title: 'Reservá tu cita',
+      subtitle: 'Elegí un servicio y encontrá un horario disponible.',
+      buttonText: 'Reservar cita',
+      items: ['Servicios', 'Horarios', 'Reservas', 'Contacto'],
+    },
+    barberia: {
+      title: 'Reservá tu estilo',
+      subtitle: 'Cortes, barba y servicios personalizados.',
+      buttonText: 'Reservar cita',
+      items: ['Cortes', 'Barba', 'Servicios', 'Contacto'],
+    },
+    unas: {
+      title: 'Belleza en tus manos',
+      subtitle: 'Reservá tu servicio de uñas fácil y rápido.',
+      buttonText: 'Reservar cita',
+      items: ['Manicure', 'Diseños', 'Promos', 'Contacto'],
+    },
+    estetica: {
+      title: 'Cuidá tu piel y tu bienestar',
+      subtitle: 'Servicios de belleza, cuidado personal y estética.',
+      buttonText: 'Reservar cita',
+      items: ['Faciales', 'Corporales', 'Promos', 'Contacto'],
+    },
+    masajes: {
+      title: 'Relajá tu cuerpo',
+      subtitle: 'Reservá una sesión para renovar tu energía.',
+      buttonText: 'Reservar sesión',
+      items: ['Masajes', 'Terapias', 'Paquetes', 'Contacto'],
+    },
+    consultorio: {
+      title: 'Tu salud es prioridad',
+      subtitle: 'Agendá tu cita de forma rápida y ordenada.',
+      buttonText: 'Agendar cita',
+      items: ['Servicios', 'Especialistas', 'Ubicación', 'Contacto'],
+    },
+    grooming: {
+      title: 'Cuidado para tu mejor amigo',
+      subtitle: 'Reservá servicios de grooming y cuidado canino.',
+      buttonText: 'Reservar cita',
+      items: ['Baño', 'Corte', 'Paquetes', 'Contacto'],
+    },
+    entrenador: {
+      title: 'Entrená tu cuerpo',
+      subtitle: 'Reservá sesiones, rutinas o planes personalizados.',
+      buttonText: 'Reservar sesión',
+      items: ['Planes', 'Rutinas', 'Progreso', 'Contacto'],
+    },
+    domicilio: {
+      title: 'Lo que necesitás, sin salir de casa',
+      subtitle: 'Agendá servicios a domicilio de forma sencilla.',
+      buttonText: 'Solicitar servicio',
+      items: ['Limpieza', 'Reparación', 'Instalación', 'Más servicios'],
+    },
+  };
+
+  return content[type] || content.general;
+}
+
   async function handleLogout() {
     await supabase.auth.signOut();
     setSession(null);
@@ -1700,6 +1761,10 @@ async function handleUpdateBusiness(e) {
   }
 
 if (isPublicPage) {
+  const publicContent = getBusinessTypeContent(
+    business?.business_type || 'general'
+  );
+
   return (
     <div
       className={`page business-theme theme-${business?.business_type || 'general'}-${business?.theme_style || 'style_1'}`}
@@ -1708,28 +1773,58 @@ if (isPublicPage) {
         <div className="dashboard-card">
           {business ? (
             <>
-              <div className="dashboard-header">
-                <div>
-                  {business.logo_url && (
-                    <img
-                      className="business-logo"
-                      src={business.logo_url}
-                      alt={`Logo de ${business.name}`}
-                    />
-                  )}
+              <div className="public-hero">
+  <div className="public-hero-top">
+    <div>
+      {business?.logo_url ? (
+        <img
+          className="business-logo"
+          src={business.logo_url}
+          alt={`Logo de ${business.name}`}
+        />
+      ) : (
+        <div className="business-logo-placeholder">
+          {business?.name?.slice(0, 1) || 'A'}
+        </div>
+      )}
 
-                  <h1>{business.name}</h1>
+      <p className="public-business-type">
+        {business?.business_type || 'general'}
+      </p>
 
-                  {business.description && (
-                    <p className="subtitle">{business.description}</p>
-                  )}
+      <h1>{business?.name}</h1>
 
-                  <p className="subtitle">{business.address}</p>
-                  <p className="subtitle">WhatsApp: {business.phone}</p>
-                </div>
-              </div>
+      {business?.description && (
+        <p className="subtitle">{business.description}</p>
+      )}
+    </div>
+  </div>
 
-              <div className="services-section">
+  <div className="public-hero-content">
+    <h2>{publicContent.title}</h2>
+    <p>{publicContent.subtitle}</p>
+
+    <div className="public-hero-actions">
+      <a href="#services" className="main-button public-hero-button">
+        {publicContent.buttonText}
+      </a>
+    </div>
+  </div>
+
+  <div className="public-feature-row">
+    {publicContent.items.map((item) => (
+      <div className="public-feature-pill" key={item}>
+        <span>{item}</span>
+      </div>
+    ))}
+  </div>
+
+  <div className="public-contact-info">
+    {business?.address && <p>{business.address}</p>}
+    {business?.phone && <p>WhatsApp: {business.phone}</p>}
+  </div>
+</div>
+              <div className="services-section" id="services">
                 <h2>Servicios disponibles</h2>
                 <p className="subtitle-left">
                   Elegí un servicio para reservar tu cita.
