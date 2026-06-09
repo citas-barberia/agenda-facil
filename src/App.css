@@ -1250,3 +1250,248 @@ input[type="color"] {
 .theme-domicilio-style_1 .public-contact-info p {
   color: #4c1d95;
 }
+/* =========================
+   PUBLIC PAGE PREMIUM FIX
+========================= */
+
+.public-page {
+  align-items: center;
+  padding-top: 36px;
+  padding-bottom: 36px;
+}
+
+.public-page .dashboard-card {
+  max-width: 760px;
+  width: 100%;
+  padding: 26px;
+  border-radius: 30px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+}
+
+.public-page .public-hero {
+  min-height: auto;
+  padding: 28px;
+  border-radius: 28px;
+  margin-bottom: 26px;
+  background: linear-gradient(145deg, #0f172a, #020617);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.public-page .business-logo,
+.public-page .business-logo-placeholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  margin-bottom: 14px;
+}
+
+.public-page .public-business-type {
+  color: var(--primary-color, #2563eb);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.public-page .public-hero h1 {
+  font-size: 34px;
+  margin-bottom: 8px;
+  color: #f8fafc;
+}
+
+.public-page .public-hero-content {
+  margin-top: 22px;
+}
+
+.public-page .public-hero-content h2 {
+  font-size: clamp(34px, 6vw, 48px);
+  line-height: 1.05;
+  margin-bottom: 12px;
+  color: #f8fafc;
+}
+
+.public-page .public-hero-content p {
+  font-size: 17px;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.public-page .public-hero-button {
+  margin-top: 8px;
+  width: auto;
+  min-width: 170px;
+  padding: 13px 22px;
+  border-radius: 12px;
+  background: var(--primary-color, #2563eb);
+  color: white;
+  text-decoration: none;
+}
+
+.public-page .public-feature-row {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.public-page .public-feature-pill {
+  padding: 13px 8px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.public-page .public-feature-pill span {
+  font-size: 12px;
+  color: #e5e7eb;
+}
+
+.public-page .public-contact-info {
+  margin-top: 18px;
+}
+
+.public-page .services-section {
+  border-radius: 24px;
+}
+
+.public-page .service-item {
+  border-radius: 18px;
+}
+
+/* BARBERÍA - premium oscuro */
+.public-page.theme-barberia-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, rgba(2, 6, 23, 0.92), rgba(17, 24, 39, 0.96)),
+    radial-gradient(circle at 90% 10%, rgba(245, 158, 11, 0.22), transparent 35%);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.public-page.theme-barberia-style_1 .public-business-type {
+  color: #f59e0b;
+}
+
+.public-page.theme-barberia-style_1 .public-hero-button {
+  background: linear-gradient(135deg, #d6b58a, #b98b5c);
+  color: #111827;
+}
+
+/* UÑAS - rosado suave */
+.public-page.theme-unas-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, #fff1f2, #fce7f3),
+    radial-gradient(circle at 90% 10%, rgba(244, 114, 182, 0.35), transparent 35%);
+  border-color: rgba(244, 114, 182, 0.4);
+}
+
+.public-page.theme-unas-style_1 .public-hero h1,
+.public-page.theme-unas-style_1 .public-hero-content h2,
+.public-page.theme-unas-style_1 .public-hero-content p,
+.public-page.theme-unas-style_1 .public-contact-info p {
+  color: #831843;
+}
+
+.public-page.theme-unas-style_1 .public-feature-pill {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.public-page.theme-unas-style_1 .public-feature-pill span {
+  color: #831843;
+}
+
+/* ESTÉTICA - limpio spa */
+.public-page.theme-estetica-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, #f0fdfa, #ccfbf1),
+    radial-gradient(circle at 90% 10%, rgba(20, 184, 166, 0.28), transparent 35%);
+  border-color: rgba(20, 184, 166, 0.35);
+}
+
+.public-page.theme-estetica-style_1 .public-hero h1,
+.public-page.theme-estetica-style_1 .public-hero-content h2,
+.public-page.theme-estetica-style_1 .public-hero-content p,
+.public-page.theme-estetica-style_1 .public-contact-info p {
+  color: #134e4a;
+}
+
+/* MASAJES - cálido */
+.public-page.theme-masajes-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, #78350f, #422006),
+    radial-gradient(circle at 90% 10%, rgba(251, 191, 36, 0.25), transparent 35%);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+/* CONSULTORIO - azul claro */
+.public-page.theme-consultorio-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, #eff6ff, #dbeafe),
+    radial-gradient(circle at 90% 10%, rgba(37, 99, 235, 0.22), transparent 35%);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.public-page.theme-consultorio-style_1 .public-hero h1,
+.public-page.theme-consultorio-style_1 .public-hero-content h2,
+.public-page.theme-consultorio-style_1 .public-hero-content p,
+.public-page.theme-consultorio-style_1 .public-contact-info p {
+  color: #1e3a8a;
+}
+
+/* GROOMING - amigable */
+.public-page.theme-grooming-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, #fef3c7, #fde68a),
+    radial-gradient(circle at 90% 10%, rgba(20, 184, 166, 0.24), transparent 35%);
+  border-color: rgba(20, 184, 166, 0.28);
+}
+
+.public-page.theme-grooming-style_1 .public-hero h1,
+.public-page.theme-grooming-style_1 .public-hero-content h2,
+.public-page.theme-grooming-style_1 .public-hero-content p,
+.public-page.theme-grooming-style_1 .public-contact-info p {
+  color: #451a03;
+}
+
+/* ENTRENADOR - fuerte */
+.public-page.theme-entrenador-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, #020617, #111827),
+    radial-gradient(circle at 90% 10%, rgba(190, 242, 100, 0.28), transparent 35%);
+  border-color: rgba(190, 242, 100, 0.32);
+}
+
+.public-page.theme-entrenador-style_1 .public-hero-button {
+  background: #bef264;
+  color: #111827;
+}
+
+/* DOMICILIO - morado limpio */
+.public-page.theme-domicilio-style_1 .public-hero {
+  background:
+    linear-gradient(145deg, #faf5ff, #ede9fe),
+    radial-gradient(circle at 90% 10%, rgba(124, 58, 237, 0.24), transparent 35%);
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.public-page.theme-domicilio-style_1 .public-hero h1,
+.public-page.theme-domicilio-style_1 .public-hero-content h2,
+.public-page.theme-domicilio-style_1 .public-hero-content p,
+.public-page.theme-domicilio-style_1 .public-contact-info p {
+  color: #4c1d95;
+}
+
+@media (max-width: 700px) {
+  .public-page .dashboard-card {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .public-page .public-hero {
+    padding: 22px;
+  }
+
+  .public-page .public-feature-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

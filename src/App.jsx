@@ -1162,7 +1162,7 @@ function getBusinessTypeContent(type) {
   if ((isPanelPage || isAuthPage) && session && business) {
     return (
       <div
-  className={`page business-theme theme-${business?.business_type || 'general'}-${business?.theme_style || 'style_1'}`}
+  className="page"
   style={{ '--primary-color': business?.primary_color || '#2563eb' }}
 >
         <div className="dashboard-card">
