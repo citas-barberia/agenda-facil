@@ -1699,13 +1699,12 @@ async function handleUpdateBusiness(e) {
     );
   }
 
-  if (isPublicPage) {
-    return (
-      <div
-  className={`page business-theme theme-${business.business_type || 'general'}-${business.theme_style || 'style_1'}`}
-  style={{ '--primary-color': business.primary_color || '#2563eb' }}
-      
-      >
+if (isPublicPage) {
+  return (
+    <div
+      className={`page business-theme theme-${business?.business_type || 'general'}-${business?.theme_style || 'style_1'}`}
+      style={{ '--primary-color': business?.primary_color || '#2563eb' }}
+    >
         <div className="dashboard-card">
           {business ? (
             <>
