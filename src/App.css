@@ -793,3 +793,245 @@ input[type="color"] {
     grid-template-columns: 1fr;
   }
 }
+.business-settings-form select {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #020617;
+  color: #e5e7eb;
+  font-family: inherit;
+}
+/* =========================
+   THEMES BASE
+========================= */
+
+.business-theme .dashboard-card,
+.business-theme .auth-card {
+  transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* GENERAL */
+
+.theme-general-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #020617, #0f172a);
+  border: 1px solid #1e293b;
+}
+
+.theme-general-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  color: #0f172a;
+}
+
+.theme-general-style_2 h1,
+.theme-general-style_2 h2,
+.theme-general-style_2 h3,
+.theme-general-style_2 p,
+.theme-general-style_2 label,
+.theme-general-style_2 strong {
+  color: #0f172a;
+}
+
+.theme-general-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #111827, #312e81);
+  border: 1px solid #6366f1;
+}
+
+/* BARBERÍA */
+
+.theme-barberia-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #020617, #111827);
+  border: 1px solid #334155;
+}
+
+.theme-barberia-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #1c1917, #44403c);
+  border: 1px solid #f59e0b;
+}
+
+.theme-barberia-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #0f172a, #7f1d1d);
+  border: 1px solid #ef4444;
+}
+
+/* UÑAS */
+
+.theme-unas-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #831843, #be185d);
+  border: 1px solid #f9a8d4;
+}
+
+.theme-unas-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #fff1f2, #fce7f3);
+  color: #831843;
+}
+
+.theme-unas-style_2 h1,
+.theme-unas-style_2 h2,
+.theme-unas-style_2 h3,
+.theme-unas-style_2 p,
+.theme-unas-style_2 label,
+.theme-unas-style_2 strong {
+  color: #831843;
+}
+
+.theme-unas-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #4c1d95, #db2777);
+  border: 1px solid #f0abfc;
+}
+
+/* ESTÉTICA */
+
+.theme-estetica-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #064e3b, #0f766e);
+  border: 1px solid #5eead4;
+}
+
+.theme-estetica-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #f8fafc, #ccfbf1);
+  color: #134e4a;
+}
+
+.theme-estetica-style_2 h1,
+.theme-estetica-style_2 h2,
+.theme-estetica-style_2 h3,
+.theme-estetica-style_2 p,
+.theme-estetica-style_2 label,
+.theme-estetica-style_2 strong {
+  color: #134e4a;
+}
+
+.theme-estetica-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #1e1b4b, #0f766e);
+  border: 1px solid #2dd4bf;
+}
+
+/* MASAJES */
+
+.theme-masajes-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #422006, #78350f);
+  border: 1px solid #fbbf24;
+}
+
+.theme-masajes-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #fffbeb, #fde68a);
+  color: #451a03;
+}
+
+.theme-masajes-style_2 h1,
+.theme-masajes-style_2 h2,
+.theme-masajes-style_2 h3,
+.theme-masajes-style_2 p,
+.theme-masajes-style_2 label,
+.theme-masajes-style_2 strong {
+  color: #451a03;
+}
+
+.theme-masajes-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #14532d, #365314);
+  border: 1px solid #84cc16;
+}
+
+/* CONSULTORIO */
+
+.theme-consultorio-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  border: 1px solid #60a5fa;
+}
+
+.theme-consultorio-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #f8fafc, #dbeafe);
+  color: #1e3a8a;
+}
+
+.theme-consultorio-style_2 h1,
+.theme-consultorio-style_2 h2,
+.theme-consultorio-style_2 h3,
+.theme-consultorio-style_2 p,
+.theme-consultorio-style_2 label,
+.theme-consultorio-style_2 strong {
+  color: #1e3a8a;
+}
+
+.theme-consultorio-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #ecfeff, #bae6fd);
+  color: #164e63;
+}
+
+.theme-consultorio-style_3 h1,
+.theme-consultorio-style_3 h2,
+.theme-consultorio-style_3 h3,
+.theme-consultorio-style_3 p,
+.theme-consultorio-style_3 label,
+.theme-consultorio-style_3 strong {
+  color: #164e63;
+}
+
+/* GROOMING */
+
+.theme-grooming-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #292524, #57534e);
+  border: 1px solid #fbbf24;
+}
+
+.theme-grooming-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #451a03;
+}
+
+.theme-grooming-style_2 h1,
+.theme-grooming-style_2 h2,
+.theme-grooming-style_2 h3,
+.theme-grooming-style_2 p,
+.theme-grooming-style_2 label,
+.theme-grooming-style_2 strong {
+  color: #451a03;
+}
+
+.theme-grooming-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #064e3b, #65a30d);
+  border: 1px solid #bef264;
+}
+
+/* ENTRENADOR */
+
+.theme-entrenador-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #020617, #7f1d1d);
+  border: 1px solid #ef4444;
+}
+
+.theme-entrenador-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #111827, #ea580c);
+  border: 1px solid #fb923c;
+}
+
+.theme-entrenador-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #020617, #166534);
+  border: 1px solid #22c55e;
+}
+
+/* DOMICILIO */
+
+.theme-domicilio-style_1 .dashboard-card {
+  background: linear-gradient(135deg, #0f172a, #374151);
+  border: 1px solid #94a3b8;
+}
+
+.theme-domicilio-style_2 .dashboard-card {
+  background: linear-gradient(135deg, #f8fafc, #e5e7eb);
+  color: #111827;
+}
+
+.theme-domicilio-style_2 h1,
+.theme-domicilio-style_2 h2,
+.theme-domicilio-style_2 h3,
+.theme-domicilio-style_2 p,
+.theme-domicilio-style_2 label,
+.theme-domicilio-style_2 strong {
+  color: #111827;
+}
+
+.theme-domicilio-style_3 .dashboard-card {
+  background: linear-gradient(135deg, #1e293b, #0369a1);
+  border: 1px solid #38bdf8;
+}

@@ -190,7 +190,8 @@ const isPublicPage =
 const [businessDescription, setBusinessDescription] = useState('');
 const [businessLogoUrl, setBusinessLogoUrl] = useState('');
 const [businessPrimaryColor, setBusinessPrimaryColor] = useState('#2563eb');
-
+const [businessType, setBusinessType] = useState('general');
+const [themeStyle, setThemeStyle] = useState('style_1');
   useEffect(() => {
     if (isPublicPage) {
       loadPublicBusiness(currentPath);
@@ -234,6 +235,8 @@ const [businessPrimaryColor, setBusinessPrimaryColor] = useState('#2563eb');
   setBusinessDescription(data.description || '');
   setBusinessLogoUrl(data.logo_url || '');
   setBusinessPrimaryColor(data.primary_color || '#2563eb');
+  setBusinessType(data.business_type || 'general');
+  setThemeStyle(data.theme_style || 'style_1');
 
       await loadServices(data.id);
       await loadAppointments(data.id);
@@ -939,14 +942,16 @@ async function handleUpdateBusiness(e) {
 
     const { data, error } = await supabase
       .from('businesses')
-      .update({
-        name: businessName,
-        phone: businessPhone,
-        address: businessAddress,
-        description: businessDescription,
-        logo_url: businessLogoUrl,
-        primary_color: businessPrimaryColor,
-      })
+.update({
+  name: businessName,
+  phone: businessPhone,
+  address: businessAddress,
+  description: businessDescription,
+  logo_url: businessLogoUrl,
+  primary_color: businessPrimaryColor,
+  business_type: businessType,
+  theme_style: themeStyle,
+})
       .eq('id', business.id)
       .select()
       .single();
@@ -1096,9 +1101,9 @@ async function handleUpdateBusiness(e) {
   if ((isPanelPage || isAuthPage) && session && business) {
     return (
       <div
-        className="page"
-        style={{ '--primary-color': business.primary_color || '#2563eb' }}
-      >
+  className={`page business-theme theme-${business?.business_type || 'general'}-${business?.theme_style || 'style_1'}`}
+  style={{ '--primary-color': business?.primary_color || '#2563eb' }}
+>
         <div className="dashboard-card">
           <div className="dashboard-header">
             <div>
@@ -1377,6 +1382,31 @@ async function handleUpdateBusiness(e) {
                 value={businessPrimaryColor}
                 onChange={(e) => setBusinessPrimaryColor(e.target.value)}
               />
+              <label>Tipo de negocio</label>
+<select
+  value={businessType}
+  onChange={(e) => setBusinessType(e.target.value)}
+>
+  <option value="general">General</option>
+  <option value="barberia">Barbería</option>
+  <option value="unas">Uñas</option>
+  <option value="estetica">Estética</option>
+  <option value="masajes">Masajes</option>
+  <option value="consultorio">Consultorio</option>
+  <option value="grooming">Grooming canino</option>
+  <option value="entrenador">Entrenador</option>
+  <option value="domicilio">Servicios a domicilio</option>
+</select>
+
+<label>Estilo visual</label>
+<select
+  value={themeStyle}
+  onChange={(e) => setThemeStyle(e.target.value)}
+>
+  <option value="style_1">Estilo 1</option>
+  <option value="style_2">Estilo 2</option>
+  <option value="style_3">Estilo 3</option>
+</select>
 
               <button className="main-button" type="submit" disabled={loading}>
                 {loading ? 'Guardando...' : 'Guardar configuración'}
@@ -1672,8 +1702,9 @@ async function handleUpdateBusiness(e) {
   if (isPublicPage) {
     return (
       <div
-        className="page"
-        style={{ '--primary-color': business?.primary_color || '#2563eb' }}
+  className={`page business-theme theme-${business.business_type || 'general'}-${business.theme_style || 'style_1'}`}
+  style={{ '--primary-color': business.primary_color || '#2563eb' }}
+      
       >
         <div className="dashboard-card">
           {business ? (
